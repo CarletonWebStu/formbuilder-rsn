@@ -889,7 +889,7 @@ var __t, __p = '', __e = _.escape;
 with (obj) {
 __p += '<div class=\'fb-edit-section-header\'>Integer only</div>\n<label>\n  <input type=\'checkbox\' data-rv-checked=\'model.' +
 ((__t = ( Formbuilder.options.mappings.INTEGER_ONLY )) == null ? '' : __t) +
-'\' />\n  Only accept integers\n</label>\n';
+'\' />\n  Only accept integers HAI DERE\n</label>\n';
 
 }
 return __p
