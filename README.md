@@ -106,12 +106,15 @@ builder.on('save', function(payload){
 Have a question about Formbuilder? Feel free to [open a GitHub Issue](https://github.com/dobtco/formbuilder/issues/new) before emailing one of us directly. That way, folks who have the same question can see our communication.
 
 ## Developing
-You'll need [node and npm](http://nodejs.org/) installed.
+Our build system relies on [node and npm](http://nodejs.org/). Install those first.
 
+Next, clone this repository. From inside the `formbuilder/` directory, run these commands:
 1. `npm install` - installs all the build system's dependencies
 2. `bower install` - installs the runtime dependencies (JS)
-3. `grunt watch` - begin live compiling
+3. `grunt watch` - begin reactive compiling
 4. open `example/index.html` and you're all set!
+
+There is a sublime-project file for Sublime Text 3, if that is your editor of choice.
 
 ## License
 MIT
