@@ -623,6 +623,16 @@
 }).call(this);
 
 (function() {
+  Formbuilder.registerField('address', {
+    order: 50,
+    view: "<div class='input-line'>\n  <span class='street'>\n    <input type='text' />\n    <label>Address</label>\n  </span>\n</div>\n\n<div class='input-line'>\n  <span class='city'>\n    <input type='text' />\n    <label>City</label>\n  </span>\n\n  <span class='state'>\n    <input type='text' />\n    <label>State / Province / Region</label>\n  </span>\n</div>\n\n<div class='input-line'>\n  <span class='zip'>\n    <input type='text' />\n    <label>Zipcode</label>\n  </span>\n\n  <span class='country'>\n    <select><option>United States</option></select>\n    <label>Country</label>\n  </span>\n</div>",
+    edit: "",
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-home\"></span></span> Address"
+  });
+
+}).call(this);
+
+(function() {
   Formbuilder.registerField('checkboxes', {
     order: 10,
     view: "<% for (i in (rf.get(Formbuilder.options.mappings.OPTIONS) || [])) { %>\n  <div>\n    <label class='fb-option'>\n      <input type='checkbox' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>\n    </label>\n  </div>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='checkbox' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
@@ -722,10 +732,20 @@
 }).call(this);
 
 (function() {
+  Formbuilder.registerField('price', {
+    order: 45,
+    view: "<div class='input-line'>\n  <span class='above-line'>$</span>\n  <span class='dolars'>\n    <input type='text' />\n    <label>Dollars</label>\n  </span>\n  <span class='above-line'>.</span>\n  <span class='cents'>\n    <input type='text' />\n    <label>Cents</label>\n  </span>\n</div>",
+    edit: "",
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-usd\"></span></span> Price"
+  });
+
+}).call(this);
+
+(function() {
   Formbuilder.registerField('radio', {
     order: 15,
     view: "<% for (i in (rf.get(Formbuilder.options.mappings.OPTIONS) || [])) { %>\n  <div>\n    <label class='fb-option'>\n      <input type='radio' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>\n    </label>\n  </div>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='radio' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
-    edit: "",
+    edit: "<%= Formbuilder.templates['edit/options']({ includeOther: true }) %>",
     addButton: "<span class=\"symbol\"><span class=\"fa fa-circle-o\"></span></span> Multiple Choice",
     defaultAttributes: function(attrs) {
       attrs.field_options.options = [
@@ -764,6 +784,26 @@
       attrs.field_options.size = 'small';
       return attrs;
     }
+  });
+
+}).call(this);
+
+(function() {
+  Formbuilder.registerField('time', {
+    order: 25,
+    view: "<div class='input-line'>\n  <span class='hours'>\n    <input type=\"text\" />\n    <label>HH</label>\n  </span>\n\n  <span class='above-line'>:</span>\n\n  <span class='minutes'>\n    <input type=\"text\" />\n    <label>MM</label>\n  </span>\n\n  <span class='above-line'>:</span>\n\n  <span class='seconds'>\n    <input type=\"text\" />\n    <label>SS</label>\n  </span>\n\n  <span class='am_pm'>\n    <select>\n      <option>AM</option>\n      <option>PM</option>\n    </select>\n  </span>\n</div>",
+    edit: "",
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-clock-o\"></span></span> Time"
+  });
+
+}).call(this);
+
+(function() {
+  Formbuilder.registerField('website', {
+    order: 35,
+    view: "<input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>' placeholder='http://' />",
+    edit: "<%= Formbuilder.templates['edit/size']() %>",
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-link\"></span></span> Website"
   });
 
 }).call(this);
