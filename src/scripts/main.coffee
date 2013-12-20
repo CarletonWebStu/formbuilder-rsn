@@ -150,8 +150,9 @@ class BuilderView extends Backbone.View
       @saveForm.call(@)
     , 5000
 
-    $(window).bind 'beforeunload', =>
-      if @formSaved then undefined else Formbuilder.options.dict.UNSAVED_CHANGES
+    if Formbuilder.options.WARN_IF_UNSAVED
+      $(window).bind 'beforeunload', =>
+        if @formSaved then undefined else Formbuilder.options.dict.UNSAVED_CHANGES
 
   reset: ->
     @$responseFields.html('')
@@ -357,6 +358,9 @@ class Formbuilder
     HTTP_ENDPOINT: ''
     HTTP_METHOD: 'POST'
 
+    SHOW_SAVE_BUTTON: true
+    WARN_IF_UNSAVED: true # this is on navigation away
+
     mappings:
       SIZE: 'field_options.size'
       UNITS: 'field_options.units'
@@ -396,6 +400,9 @@ class Formbuilder
       Formbuilder.nonInputFields[name] = opts
     else
       Formbuilder.inputFields[name] = opts
+
+  saveForm: -> #expose an instance method to manually save the data
+    @mainView.saveForm()
 
   constructor: (opts={}) ->
     _.extend @, Backbone.Events
