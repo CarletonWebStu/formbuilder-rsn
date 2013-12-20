@@ -361,6 +361,10 @@ class Formbuilder
     SHOW_SAVE_BUTTON: true
     WARN_IF_UNSAVED: true # this is on navigation away
 
+    UNLISTED_FIELDS: [
+      'submit_button'
+    ]
+
     mappings:
       SIZE: 'field_options.size'
       UNITS: 'field_options.units'
@@ -389,6 +393,8 @@ class Formbuilder
   @nonInputFields: {}
 
   @registerField: (name, opts) ->
+    if name in Formbuilder.options.UNLISTED_FIELDS
+      return
     for x in ['view', 'edit']
       opts[x] = _.template(opts[x])
 
