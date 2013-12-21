@@ -46,6 +46,7 @@ module.exports = (grunt) ->
       all:
         files:
           '<%= compiledFolder %>/scripts.js': [
+            '<%= srcFolder %>/scripts/underscore_mixins.coffee'
             '<%= srcFolder %>/scripts/rivets-config.coffee'
             '<%= srcFolder %>/scripts/main.coffee'
             '<%= srcFolder %>/scripts/fields/*.coffee'

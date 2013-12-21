@@ -342,11 +342,10 @@ class BuilderView extends Backbone.View
 class Formbuilder
   @helpers:
     defaultFieldAttrs: (field_type) ->
-      attrs =
-        label: "Untitled"
-        field_type: field_type
-        required: true
-        field_options: {}
+      attrs = {}
+      _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Untitled')
+      _.pathAssign(attrs, Formbuilder.options.mappings.FIELD_TYPE, field_type)
+      _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, true)
 
       Formbuilder.fields[field_type].defaultAttributes?(attrs) || attrs
 
@@ -407,7 +406,7 @@ class Formbuilder
     else
       Formbuilder.inputFields[name] = opts
 
-  saveForm: -> #expose an instance method to manually save the data
+  saveForm: => #expose an instance method to manually save the data
     @mainView.saveForm()
 
   constructor: (opts={}) ->

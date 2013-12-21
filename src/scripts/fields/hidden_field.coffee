@@ -20,5 +20,6 @@ Formbuilder.registerField 'hidden_field',
   """
 
   defaultAttributes: (attrs) ->
-    attrs.label = 'Hidden Field'
+    _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Hidden Field')
+
     attrs

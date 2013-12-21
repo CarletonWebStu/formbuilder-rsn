@@ -25,14 +25,13 @@ Formbuilder.registerField 'dropdown',
   """
 
   defaultAttributes: (attrs) ->
-    attrs.field_options.options = [
-      label: "",
-      checked: false
-    ,
-      label: "",
-      checked: false
-    ]
-
-    attrs.field_options.include_blank_option = false
+    _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, [
+        label: "",
+        checked: false
+      ,
+        label: "",
+        checked: false
+      ])
+    _.pathAssign(attrs, Formbuilder.options.mappings.INCLUDE_BLANK, false)
 
     attrs

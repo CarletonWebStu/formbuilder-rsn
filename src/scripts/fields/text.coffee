@@ -16,5 +16,6 @@ Formbuilder.registerField 'text',
   """
 
   defaultAttributes: (attrs) ->
-    attrs.field_options.size = 'small'
+    _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')
+
     attrs

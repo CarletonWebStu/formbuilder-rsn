@@ -18,6 +18,7 @@ Formbuilder.registerField 'submit_button',
   """
 
   defaultAttributes: (attrs) ->
-    attrs.label = 'Submit'
-    attrs.field_options.description = 'Submit'
+    _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Submit')
+    _.pathAssign(attrs, Formbuilder.options.mappings.DESCRIPTION, 'Submit')
+
     attrs
