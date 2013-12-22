@@ -5,6 +5,9 @@ class FormbuilderModel extends Backbone.DeepModel
     $(".fb-field-wrapper").index $wrapper
   is_input: ->
     Formbuilder.inputFields[@get(Formbuilder.options.mappings.FIELD_TYPE)]?
+  is_last_submit: ->
+    # if the model is last and is a submit button
+    (@collection.length - @collection.indexOf(@)) is 1 and @get(Formbuilder.options.mappings.FIELD_TYPE) is 'submit_button'
 
 
 class FormbuilderCollection extends Backbone.Collection
@@ -36,7 +39,11 @@ class ViewFieldView extends Backbone.View
   render: ->
     @$el.addClass('response-field-' + @model.get(Formbuilder.options.mappings.FIELD_TYPE))
         .data('cid', @model.cid)
-        .html(Formbuilder.templates["view/base#{if !@model.is_input() then '_non_input' else ''}"]({rf: @model}))
+        .html(Formbuilder.templates["view/base#{
+          if @model.is_last_submit() then '_no_duprem'
+          else if !@model.is_input() then '_non_input'
+          else ''
+          }"]({rf: @model}))
 
     return @
 
@@ -139,6 +146,15 @@ class BuilderView extends Backbone.View
 
     @render()
     @collection.reset(@bootstrapData)
+    #If this is (a new form OR one without a submit button) and formbuilder is configured to add one
+    if _.pathGet(@bootstrapData[@bootstrapData.length-1], Formbuilder.options.mappings.FIELD_TYPE) isnt 'submit_button' and
+        Formbuilder.options.INCLUDE_BOTTOM_SUBMIT
+      @collection.push({
+        "label":"Submit"
+        "field_type":"submit_button"
+        "required":true
+        "field_options":{"description":"Submit"}
+      })
     @initAutosave()
 
   initAutosave: ->
@@ -226,6 +242,7 @@ class BuilderView extends Backbone.View
     @$responseFields.sortable
       forcePlaceholderSize: true
       placeholder: 'sortable-placeholder'
+      items: '>div:not(.response-field-submit_button:last-child)'
       stop: (e, ui) =>
         if ui.item.data('field-type')
           rf = @collection.create Formbuilder.helpers.defaultFieldAttrs(ui.item.data('field-type')), {$replaceEl: ui.item}
@@ -359,9 +376,10 @@ class Formbuilder
 
     SHOW_SAVE_BUTTON: true
     WARN_IF_UNSAVED: true # this is on navigation away
+    INCLUDE_BOTTOM_SUBMIT: true
 
     UNLISTED_FIELDS: [
-      'submit_button'
+     'submit_button'
     ]
 
     mappings:
@@ -392,8 +410,6 @@ class Formbuilder
   @nonInputFields: {}
 
   @registerField: (name, opts) ->
-    if name in Formbuilder.options.UNLISTED_FIELDS
-      return
     for x in ['view', 'edit']
       opts[x] = _.template(opts[x])
 
@@ -401,10 +417,12 @@ class Formbuilder
 
     Formbuilder.fields[name] = opts
 
-    if opts.type == 'non_input'
-      Formbuilder.nonInputFields[name] = opts
-    else
-      Formbuilder.inputFields[name] = opts
+    #register field in edit pane
+    if name not in Formbuilder.options.UNLISTED_FIELDS
+      if opts.type == 'non_input'
+        Formbuilder.nonInputFields[name] = opts
+      else
+        Formbuilder.inputFields[name] = opts
 
   saveForm: => #expose an instance method to manually save the data
     @mainView.saveForm()
