@@ -214,11 +214,17 @@ class BuilderView extends Backbone.View
       model: responseField
       parentView: @
 
+    console.log(responseField.is_last_submit() and Formbuilder.options.INCLUDE_BOTTOM_SUBMIT)
+
     #####
     # Calculates where to place this new field.
     #
+    # Is this the last submit button?
+    if responseField.is_last_submit() and Formbuilder.options.INCLUDE_BOTTOM_SUBMIT
+      @$responseFields.parent().append view.render().el
+
     # Are we replacing a temporarily drag placeholder?
-    if options.$replaceEl?
+    else if options.$replaceEl?
       options.$replaceEl.replaceWith(view.render().el)
 
     # Are we adding to the bottom?
@@ -237,12 +243,14 @@ class BuilderView extends Backbone.View
     else
       @$responseFields.append view.render().el
 
+
   setSortable: ->
     @$responseFields.sortable('destroy') if @$responseFields.hasClass('ui-sortable')
     @$responseFields.sortable
       forcePlaceholderSize: true
+      axis: 'y'
+      containment: @$responseFields.parent()
       placeholder: 'sortable-placeholder'
-      items: '>div:not(.response-field-submit_button:last-child)'
       stop: (e, ui) =>
         if ui.item.data('field-type')
           rf = @collection.create Formbuilder.helpers.defaultFieldAttrs(ui.item.data('field-type')), {$replaceEl: ui.item}
@@ -287,7 +295,8 @@ class BuilderView extends Backbone.View
 
   createAndShowEditView: (model) ->
     $responseFieldEl = @$el.find(".fb-field-wrapper").filter( -> $(@).data('cid') == model.cid )
-    $responseFieldEl.addClass('editing').siblings('.fb-field-wrapper').removeClass('editing')
+    #Set the editing classes, including fb-field-wrapper outside the list too (ad-hoc for last submit.)
+    $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing')
 
     if @editView
       if @editView.model.cid is model.cid
@@ -376,7 +385,7 @@ class Formbuilder
 
     SHOW_SAVE_BUTTON: true
     WARN_IF_UNSAVED: true # this is on navigation away
-    INCLUDE_BOTTOM_SUBMIT: true
+    INCLUDE_BOTTOM_SUBMIT: false
 
     UNLISTED_FIELDS: [
      'submit_button'
