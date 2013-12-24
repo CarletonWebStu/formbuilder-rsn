@@ -12,7 +12,7 @@ Formbuilder.registerField 'hidden_field',
   edit: """
     <div class='fb-edit-section-header'>Data</div>
     <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'
-      placeholder='Add a longer description to this field'></textarea>
+      placeholder='Add some data to this hidden field'></textarea>
   """
 
   addButton: """
