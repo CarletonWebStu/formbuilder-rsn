@@ -137,7 +137,7 @@ $editing-border = darken($editing-bg, 7%)
 }
 
 .fb-response-fields {
-  padding-bottom: 150px;
+  min-height:100px;
 }
 
 .fb-response-fields a.sortable-placeholder {
@@ -154,11 +154,18 @@ $editing-border = darken($editing-bg, 7%)
   cursor: pointer;
   position: relative;
   margin-bottom: 20px;
+  background-color: RGBA(255,255,255,.8);
 
   input {
     border-radius: 3px;
     border: thin solid #ddd;
   }
+}
+
+.fb-response-fields .fb-field-wrapper, .fb-button {
+  cursor: -webkit-grab;
+  cursor: -moz-grab;
+  cursor: grab;
 }
 
 .fb-field-wrapper:hover .actions-wrapper,.fb-field-wrapper.editing .actions-wrapper {

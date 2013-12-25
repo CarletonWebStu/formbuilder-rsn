@@ -147,7 +147,7 @@ class BuilderView extends Backbone.View
     @render()
     @collection.reset(@bootstrapData)
     #If this is (a new form OR one without a submit button) and formbuilder is configured to add one
-    if _.pathGet(@bootstrapData[@bootstrapData.length-1], Formbuilder.options.mappings.FIELD_TYPE) isnt 'submit_button' and
+    if _.pathGet(@bootstrapData?[@bootstrapData?.length-1], Formbuilder.options.mappings.FIELD_TYPE) isnt 'submit_button' and
         Formbuilder.options.INCLUDE_BOTTOM_SUBMIT
       @collection.push({
         "label":"Submit"
@@ -214,8 +214,6 @@ class BuilderView extends Backbone.View
       model: responseField
       parentView: @
 
-    console.log(responseField.is_last_submit() and Formbuilder.options.INCLUDE_BOTTOM_SUBMIT)
-
     #####
     # Calculates where to place this new field.
     #
@@ -249,7 +247,7 @@ class BuilderView extends Backbone.View
     @$responseFields.sortable
       forcePlaceholderSize: true
       axis: 'y'
-      containment: @$responseFields.parent()
+      containment: @$responseFields.parent().parent()
       placeholder: 'sortable-placeholder'
       stop: (e, ui) =>
         if ui.item.data('field-type')
@@ -282,7 +280,11 @@ class BuilderView extends Backbone.View
     @setSortable()
 
   hideShowNoResponseFields: ->
-    @$el.find(".fb-no-response-fields")[if @collection.length > 0 then 'hide' else 'show']()
+    @$el.find(".fb-no-response-fields")[ if \
+      ((@collection.length is 1 and
+        Formbuilder.options.INCLUDE_BOTTOM_SUBMIT and
+        @collection.models[0]?.is_last_submit()) or
+      @collection.length is 0) then 'show' else 'hide']()
 
   addField: (e) ->
     field_type = $(e.currentTarget).data('field-type')
@@ -436,10 +438,13 @@ class Formbuilder
   saveForm: => #expose an instance method to manually save the data
     @mainView.saveForm()
 
+  debug: {}
+
   constructor: (opts={}) ->
     _.extend @, Backbone.Events
     args = _.extend opts, {formBuilder: @}
     @mainView = new BuilderView args
+    @debug.BuilderView = @mainView
 
 window.Formbuilder = Formbuilder
 
