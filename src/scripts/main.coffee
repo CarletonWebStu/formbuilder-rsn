@@ -149,12 +149,12 @@ class BuilderView extends Backbone.View
     #If this is (a new form OR one without a submit button) and formbuilder is configured to add one
     if _.pathGet(@bootstrapData?[@bootstrapData?.length-1], Formbuilder.options.mappings.FIELD_TYPE) isnt 'submit_button' and
         Formbuilder.options.INCLUDE_BOTTOM_SUBMIT
-      @collection.push({
-        "label":"Submit"
-        "field_type":"submit_button"
-        "required":true
-        "field_options":{"description":"Submit"}
-      })
+      newSubmit = {}
+      _.pathAssign(newSubmit, Formbuilder.options.mappings.LABEL, 'Submit')
+      _.pathAssign(newSubmit, Formbuilder.options.mappings.FIELD_TYPE, "submit_button")
+      _.pathAssign(newSubmit, Formbuilder.options.mappings.REQUIRED, true)
+      _.pathAssign(newSubmit, Formbuilder.options.mappings.DESCRIPTION, 'Submit')
+      @collection.push(newSubmit)
     @initAutosave()
 
   initAutosave: ->
@@ -387,7 +387,7 @@ class Formbuilder
 
     SHOW_SAVE_BUTTON: true
     WARN_IF_UNSAVED: true # this is on navigation away
-    INCLUDE_BOTTOM_SUBMIT: false
+    INCLUDE_BOTTOM_SUBMIT: true
 
     UNLISTED_FIELDS: [
      'submit_button'
@@ -438,13 +438,13 @@ class Formbuilder
   saveForm: => #expose an instance method to manually save the data
     @mainView.saveForm()
 
-  debug: {}
+  #debug: {}
 
   constructor: (opts={}) ->
     _.extend @, Backbone.Events
     args = _.extend opts, {formBuilder: @}
     @mainView = new BuilderView args
-    @debug.BuilderView = @mainView
+    #@debug.BuilderView = @mainView
 
 window.Formbuilder = Formbuilder
 
