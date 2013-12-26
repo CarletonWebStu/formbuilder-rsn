@@ -160,11 +160,13 @@ class BuilderView extends Backbone.View
     #If this is (a new form OR one without a submit button) and formbuilder is configured to add one
     if _.pathGet(@bootstrapData?[@bootstrapData?.length-1], Formbuilder.options.mappings.FIELD_TYPE) isnt 'submit_button' and
         Formbuilder.options.FORCE_BOTTOM_SUBMIT
-      newSubmit = {}
-      _.pathAssign(newSubmit, Formbuilder.options.mappings.LABEL, 'Submit')
-      _.pathAssign(newSubmit, Formbuilder.options.mappings.FIELD_TYPE, "submit_button")
-      _.pathAssign(newSubmit, Formbuilder.options.mappings.REQUIRED, true)
-      _.pathAssign(newSubmit, Formbuilder.options.mappings.DESCRIPTION, 'Submit')
+      newSubmit = new FormbuilderModel
+      setter = {}
+      setter[Formbuilder.options.mappings.LABEL]       = 'Submit'
+      setter[Formbuilder.options.mappings.FIELD_TYPE]  = 'submit_button'
+      setter[Formbuilder.options.mappings.REQUIRED]    = true
+      setter[Formbuilder.options.mappings.DESCRIPTION] = 'Submit'
+      newSubmit.set(setter)
       @collection.push(newSubmit)
     @initAutosave()
     @setUndoButton()
@@ -188,9 +190,11 @@ class BuilderView extends Backbone.View
       @$undoDeleteButton.attr('disabled', true)
                         .text(Formbuilder.options.dict.NOTHING_TO_UNDO)
     else
-      lastElName = _.pathGet(@undoStack.at(@undoStack.length-1), Formbuilder.options.mappings.FIELD_TYPE)
+      topModel = @undoStack.at(@undoStack.length - 1).get('model')
+      lastElType = topModel.get(Formbuilder.options.mappings.FIELD_TYPE)
+      lastElLabel = topModel.get(Formbuilder.options.mappings.LABEL)
       @$undoDeleteButton.attr('disabled', false)
-                        .text(Formbuilder.options.dict.UNDO_DELETE)
+                        .text(Formbuilder.options.dict.UNDO_DELETE(lastElType, lastElLabel))
 
   reset: ->
     @$responseFields.html('')
@@ -396,7 +400,6 @@ class BuilderView extends Backbone.View
 
   undoDelete: (e) ->
     restoree = @undoStack.pop()
-
     @collection.create(restoree.get('model'), {position: restoree.get('position')})
 
 class Formbuilder
@@ -448,7 +451,8 @@ class Formbuilder
       SAVE_FORM: 'Save form'
       UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!'
       NOTHING_TO_UNDO: 'Nothing to restore'
-      UNDO_DELETE: 'Undo deletion of #{lastElName}' #lastElName is the field type of the most recently deleted field
+      UNDO_DELETE: (lastElType, lastElLabel) ->
+        'Undo deletion of ' + _(lastElType).capitalize() + " Field '" + _(lastElLabel).truncate(15) + "'"
 
   @fields: {}
   @inputFields: {}
