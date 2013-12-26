@@ -4,15 +4,16 @@ Formbuilder.js (JSlote fork)
 Formbuilder is a graphical interface for letting users build their own webforms. Think Wufoo or Google Forms, but a lightweight component that can be integrated into your application.
 
 This fork, in particular, is concerned with flexibility.
+* Touch is fully supported.
 * Fields in the palette are may be shown to the user depending on their support in the rest of your system
 * Almost every new feature added can be turned off with an easy switch.
 * An AJAX backend is not assumed. A saveForm() function is exposed to maximize flexibility.
-* The form can be given a mandatory yet customizeable submit button at its end
+* The form can be given a mandatory yet customizeable submit button at its end.
 
 *Formbuilder.js only handles the client-side logic of creating a form. It will output a structured JSON representation of your form, but saving the form, rendering it on the server, and storing users' responses is all up to you. If you're using Rails, there is also [Formbuilder.rb](https://github.com/dobtco/formbuilder-rb), a Rails engine that's designed to provide this server-side functionality.*
 
-## Demo
-[Click here](http://dobtco.github.io/formbuilder/) to see Formbuilder in action.
+## Demo of this fork
+[Click here](http://jslote.github.io/formbuilder/) to see Formbuilder in action.
 
 ## Basic usage
 ```
