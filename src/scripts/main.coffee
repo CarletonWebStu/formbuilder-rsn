@@ -9,7 +9,6 @@ class FormbuilderModel extends Backbone.DeepModel
     # if the model is last and is a submit button
     (@collection.length - @collection.indexOf(@)) is 1 and @get(Formbuilder.options.mappings.FIELD_TYPE) is 'submit_button'
 
-
 class FormbuilderCollection extends Backbone.Collection
   initialize: ->
     @on 'add', @copyCidToModel
@@ -22,6 +21,12 @@ class FormbuilderCollection extends Backbone.Collection
   copyCidToModel: (model) ->
     model.attributes.cid = model.cid
 
+# Classes for history
+class DeletedFieldModel extends Backbone.DeepModel
+  sync: -> # noop
+
+class DeletedFieldCollection extends Backbone.Collection
+  model: DeletedFieldModel
 
 class ViewFieldView extends Backbone.View
   className: "fb-field-wrapper"
@@ -34,7 +39,7 @@ class ViewFieldView extends Backbone.View
   initialize: (options) ->
     {@parentView} = options
     @listenTo @model, "change", @render
-    @listenTo @model, "destroy", @remove
+    @listenTo @model, "remove", @remove
 
   render: ->
     @$el.addClass('response-field-' + @model.get(Formbuilder.options.mappings.FIELD_TYPE))
@@ -52,7 +57,8 @@ class ViewFieldView extends Backbone.View
 
   clear: ->
     @parentView.handleFormUpdate()
-    @model.destroy()
+    @parentView.deleteToStack(@model)
+    #@model.destroy()
 
   duplicate: ->
     attrs = _.clone(@model.attributes)
@@ -72,7 +78,7 @@ class EditFieldView extends Backbone.View
 
   initialize: (options) ->
     {@parentView} = options
-    @listenTo @model, "destroy", @remove
+    @listenTo @model, "remove", @remove
 
   render: ->
     @$el.html(Formbuilder.templates["edit/base#{if !@model.is_input() then '_non_input' else ''}"]({rf: @model}))
@@ -142,14 +148,18 @@ class BuilderView extends Backbone.View
     @collection.bind 'add', @addOne, @
     @collection.bind 'reset', @reset, @
     @collection.bind 'change', @handleFormUpdate, @
-    @collection.bind 'destroy add reset', @hideShowNoResponseFields, @
-    @collection.bind 'destroy', @ensureEditViewScrolled, @
+    @collection.bind 'remove add reset', @hideShowNoResponseFields, @
+    @collection.bind 'remove', @ensureEditViewScrolled, @
+
+    # Create the undo stack, and bind the appropriate events
+    @undoStack = new DeletedFieldCollection
+    @undoStack.bind 'add remove', @setUndoButton, @
 
     @render()
     @collection.reset(@bootstrapData)
     #If this is (a new form OR one without a submit button) and formbuilder is configured to add one
     if _.pathGet(@bootstrapData?[@bootstrapData?.length-1], Formbuilder.options.mappings.FIELD_TYPE) isnt 'submit_button' and
-        Formbuilder.options.INCLUDE_BOTTOM_SUBMIT
+        Formbuilder.options.FORCE_BOTTOM_SUBMIT
       newSubmit = {}
       _.pathAssign(newSubmit, Formbuilder.options.mappings.LABEL, 'Submit')
       _.pathAssign(newSubmit, Formbuilder.options.mappings.FIELD_TYPE, "submit_button")
@@ -157,7 +167,7 @@ class BuilderView extends Backbone.View
       _.pathAssign(newSubmit, Formbuilder.options.mappings.DESCRIPTION, 'Submit')
       @collection.push(newSubmit)
     @initAutosave()
-    @initUndoStack()
+    @setUndoButton()
 
   initAutosave: ->
     @formSaved = true
@@ -172,9 +182,15 @@ class BuilderView extends Backbone.View
       $(window).bind 'beforeunload', =>
         if @formSaved then undefined else Formbuilder.options.dict.UNSAVED_CHANGES
 
-  initUndoStack: ->
-    @undoDeleteButton = @$el.find('.js-undo-delete')
-    @undoDeleteButton.attr('disabled', true).text(Formbuilder.options.dict.NOTHING_TO_UNDO)
+  setUndoButton: ->
+    @$undoDeleteButton = @$el.find('.js-undo-delete')
+    if not @undoStack.length
+      @$undoDeleteButton.attr('disabled', true)
+                        .text(Formbuilder.options.dict.NOTHING_TO_UNDO)
+    else
+      lastElName = _.pathGet(@undoStack.at(@undoStack.length-1), Formbuilder.options.mappings.FIELD_TYPE)
+      @$undoDeleteButton.attr('disabled', false)
+                        .text(Formbuilder.options.dict.UNDO_DELETE)
 
   reset: ->
     @$responseFields.html('')
@@ -224,7 +240,7 @@ class BuilderView extends Backbone.View
     # Calculates where to place this new field.
     #
     # Is this the last submit button?
-    if responseField.is_last_submit() and Formbuilder.options.INCLUDE_BOTTOM_SUBMIT
+    if responseField.is_last_submit() and Formbuilder.options.FORCE_BOTTOM_SUBMIT
       @$responseFields.parent().append view.render().el
 
     # Are we replacing a temporarily drag placeholder?
@@ -287,9 +303,9 @@ class BuilderView extends Backbone.View
 
   hideShowNoResponseFields: ->
     @$el.find(".fb-no-response-fields")[ if \
-      ((@collection.length is 1 and
-        Formbuilder.options.INCLUDE_BOTTOM_SUBMIT and
-        @collection.models[0]?.is_last_submit()) or
+      ((@collection.length is 1 and #if there's only a mandatory submit button
+        Formbuilder.options.FORCE_BOTTOM_SUBMIT and
+        @collection.models[0]?.is_last_submit()) or #or if we have no fields
       @collection.length is 0) then 'show' else 'hide']()
 
   addField: (e) ->
@@ -372,8 +388,16 @@ class BuilderView extends Backbone.View
 
         @updatingBatch = undefined
 
+  deleteToStack: (model) ->
+    @undoStack.push({
+      position: model.indexInDOM() #this must be called first, before the model is removed
+      model: @collection.remove(model)
+      })
+
   undoDelete: (e) ->
-    #move the old form element back to where it should go
+    restoree = @undoStack.pop()
+
+    @collection.create(restoree.get('model'), {position: restoree.get('position')})
 
 class Formbuilder
   @helpers:
@@ -395,7 +419,7 @@ class Formbuilder
 
     SHOW_SAVE_BUTTON: true
     WARN_IF_UNSAVED: true # this is on navigation away
-    INCLUDE_BOTTOM_SUBMIT: true
+    FORCE_BOTTOM_SUBMIT: true
 
     UNLISTED_FIELDS: [
      'submit_button'
@@ -423,8 +447,8 @@ class Formbuilder
       ALL_CHANGES_SAVED: 'All changes saved'
       SAVE_FORM: 'Save form'
       UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!'
-      NOTHING_TO_UNDO: 'Nothing to undo'
-      UNDO_DELETE: 'Undo deletion of #{lastElName}'
+      NOTHING_TO_UNDO: 'Nothing to restore'
+      UNDO_DELETE: 'Undo deletion of #{lastElName}' #lastElName is the field type of the most recently deleted field
 
   @fields: {}
   @inputFields: {}
@@ -448,13 +472,13 @@ class Formbuilder
   saveForm: => #expose an instance method to manually save the data
     @mainView.saveForm()
 
-  #debug: {}
+  debug: {}
 
   constructor: (opts={}) ->
     _.extend @, Backbone.Events
     args = _.extend opts, {formBuilder: @}
     @mainView = new BuilderView args
-    #@debug.BuilderView = @mainView
+    @debug.BuilderView = @mainView
 
 window.Formbuilder = Formbuilder
 
