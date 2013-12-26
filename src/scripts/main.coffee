@@ -215,7 +215,7 @@ class BuilderView extends Backbone.View
     if target == '#editField' && !@editView && (first_model = @collection.models[0])
       @createAndShowEditView(first_model)
 
-  addOne: (responseField, options) ->
+  addOne: (responseField, _, options) ->
     view = new ViewFieldView
       model: responseField
       parentView: @
