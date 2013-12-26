@@ -125,6 +125,7 @@ class BuilderView extends Backbone.View
   SUBVIEWS: []
 
   events:
+    'click .js-undo-delete': 'undoDelete'
     'click .js-save-form': 'saveForm'
     'click .fb-tabs a': 'showTab'
     'click .fb-add-field-types a': 'addField'
@@ -156,6 +157,7 @@ class BuilderView extends Backbone.View
       _.pathAssign(newSubmit, Formbuilder.options.mappings.DESCRIPTION, 'Submit')
       @collection.push(newSubmit)
     @initAutosave()
+    @initUndoStack()
 
   initAutosave: ->
     @formSaved = true
@@ -169,6 +171,10 @@ class BuilderView extends Backbone.View
     if Formbuilder.options.WARN_IF_UNSAVED
       $(window).bind 'beforeunload', =>
         if @formSaved then undefined else Formbuilder.options.dict.UNSAVED_CHANGES
+
+  initUndoStack: ->
+    @undoDeleteButton = @$el.find('.js-undo-delete')
+    @undoDeleteButton.attr('disabled', true).text(Formbuilder.options.dict.NOTHING_TO_UNDO)
 
   reset: ->
     @$responseFields.html('')
@@ -209,7 +215,7 @@ class BuilderView extends Backbone.View
     if target == '#editField' && !@editView && (first_model = @collection.models[0])
       @createAndShowEditView(first_model)
 
-  addOne: (responseField, _, options) ->
+  addOne: (responseField, options) ->
     view = new ViewFieldView
       model: responseField
       parentView: @
@@ -366,6 +372,8 @@ class BuilderView extends Backbone.View
 
         @updatingBatch = undefined
 
+  undoDelete: (e) ->
+    #move the old form element back to where it should go
 
 class Formbuilder
   @helpers:
@@ -415,6 +423,8 @@ class Formbuilder
       ALL_CHANGES_SAVED: 'All changes saved'
       SAVE_FORM: 'Save form'
       UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!'
+      NOTHING_TO_UNDO: 'Nothing to undo'
+      UNDO_DELETE: 'Undo deletion of #{lastElName}'
 
   @fields: {}
   @inputFields: {}
