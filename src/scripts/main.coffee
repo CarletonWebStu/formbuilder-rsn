@@ -408,7 +408,7 @@ class Formbuilder
       attrs = {}
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Untitled')
       _.pathAssign(attrs, Formbuilder.options.mappings.FIELD_TYPE, field_type)
-      _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, true)
+      _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, false)
 
       Formbuilder.fields[field_type].defaultAttributes?(attrs) || attrs
 
