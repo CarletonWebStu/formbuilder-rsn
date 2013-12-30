@@ -36,6 +36,7 @@
 .fb-field-wrapper .subtemplate-wrapper{border:1px dashed transparent;margin-bottom:10px;padding:10px;position:relative}
 .fb-field-wrapper .subtemplate-wrapper .cover{position:absolute;top:0;left:0;height:100%;width:100%;z-index:2}
 .fb-field-wrapper .subtemplate-wrapper > label{display:block;border-bottom:thin solid #eee;padding-bottom:3px;margin-bottom:7px}
+.fb-field-wrapper .subtemplate-wrapper label.preview-only{color:#bbb}
 .fb-field-wrapper .subtemplate-wrapper abbr{color:#f00}
 .fb-field-wrapper .input-line{clear:both;margin-bottom:10px}
 .fb-field-wrapper .input-line .above-line{margin-top:7px}

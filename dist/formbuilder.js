@@ -354,7 +354,6 @@
         setter = {};
         setter[Formbuilder.options.mappings.LABEL] = 'Submit';
         setter[Formbuilder.options.mappings.FIELD_TYPE] = 'submit_button';
-        setter[Formbuilder.options.mappings.REQUIRED] = true;
         setter[Formbuilder.options.mappings.DESCRIPTION] = 'Submit';
         newSubmit.set(setter);
         this.collection.push(newSubmit);
@@ -665,7 +664,7 @@
         attrs = {};
         _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Untitled');
         _.pathAssign(attrs, Formbuilder.options.mappings.FIELD_TYPE, field_type);
-        _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, true);
+        _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, Formbuilder.options.REQUIRED_DEFAULT);
         return (typeof (_base = Formbuilder.fields[field_type]).defaultAttributes === "function" ? _base.defaultAttributes(attrs) : void 0) || attrs;
       },
       simple_format: function(x) {
@@ -680,6 +679,7 @@
       SHOW_SAVE_BUTTON: true,
       WARN_IF_UNSAVED: true,
       FORCE_BOTTOM_SUBMIT: true,
+      REQUIRED_DEFAULT: false,
       UNLISTED_FIELDS: ['submit_button'],
       mappings: {
         SIZE: 'field_options.size',
@@ -857,8 +857,8 @@
   Formbuilder.registerField('hidden_field', {
     order: 10,
     type: 'non_input',
-    view: "<label>Hidden Field:</label>\n<pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>",
-    edit: "<div class='fb-edit-section-header'>Data</div>\n<textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n  placeholder='Add some data to this hidden field'></textarea>",
+    view: "<label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>\n<pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>",
+    edit: "<div class='fb-edit-section-header'>Label</div>\n<input type='text' data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>' />\n<div class='fb-edit-section-header'>Data</div>\n<textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n  placeholder='Add some data to this hidden field'></textarea>",
     addButton: "<span class='symbol'><span class='fa fa-code'></span></span> Hidden Field",
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Hidden Field');
@@ -959,6 +959,21 @@
     addButton: "<span class='symbol'><span class='fa fa-font'></span></span> Text",
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small');
+      return attrs;
+    }
+  });
+
+}).call(this);
+
+(function() {
+  Formbuilder.registerField('text_comment', {
+    order: 20,
+    type: 'non_input',
+    view: "<label class=\"preview-only\">Text Comment</label>\n<p><%= rf.get(Formbuilder.options.mappings.DESCRIPTION) %></p>",
+    edit: "<div class='fb-edit-section-header'>Text</div>\n<textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n  placeholder='Add some text'></textarea>",
+    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> Text Comment",
+    defaultAttributes: function(attrs) {
+      _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Text Comment');
       return attrs;
     }
   });
