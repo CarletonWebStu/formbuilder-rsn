@@ -164,7 +164,6 @@ class BuilderView extends Backbone.View
       setter = {}
       setter[Formbuilder.options.mappings.LABEL]       = 'Submit'
       setter[Formbuilder.options.mappings.FIELD_TYPE]  = 'submit_button'
-      setter[Formbuilder.options.mappings.REQUIRED]    = true
       setter[Formbuilder.options.mappings.DESCRIPTION] = 'Submit'
       newSubmit.set(setter)
       @collection.push(newSubmit)
@@ -408,7 +407,7 @@ class Formbuilder
       attrs = {}
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Untitled')
       _.pathAssign(attrs, Formbuilder.options.mappings.FIELD_TYPE, field_type)
-      _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, false)
+      _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, Formbuilder.options.REQUIRED_DEFAULT)
 
       Formbuilder.fields[field_type].defaultAttributes?(attrs) || attrs
 
@@ -423,6 +422,7 @@ class Formbuilder
     SHOW_SAVE_BUTTON: true
     WARN_IF_UNSAVED: true # this is on navigation away
     FORCE_BOTTOM_SUBMIT: true
+    REQUIRED_DEFAULT: false
 
     UNLISTED_FIELDS: [
      'submit_button'
