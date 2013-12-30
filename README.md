@@ -24,6 +24,30 @@ var formbuilder = new Formbuilder('#formbuilder');
 </script>
 ```
 
+## Configuring the script
+
+To set the various options of the script at runtime, use `Formbuilder.config()`
+
+```
+Formbuilder.config({
+  UNLISTED_FIELDS: ['submit_button',
+                    'address',
+                    'email',
+                    'price',
+                    'website',
+                    'file'],
+  SHOW_SAVE_BUTTON: false,
+  FORCE_BOTTOM_SUBMIT: false
+})
+```
+
+A suggested technique is to put the config function in another file and include it after formbuilder.js, like this:
+
+```
+<script src="dist/formbuilder.js"></script>
+<script src="formbuilder-config.js"></script>
+```
+
 See more usage examples in the [wiki](https://github.com/dobtco/formbuilder/wiki).
 
 ## Design &amp; Dependencies
