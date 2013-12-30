@@ -422,7 +422,7 @@ class Formbuilder
     SHOW_SAVE_BUTTON: true
     WARN_IF_UNSAVED: true # this is on navigation away
     FORCE_BOTTOM_SUBMIT: true
-    REQUIRED_DEFAULT: false
+    REQUIRED_DEFAULT: true
 
     UNLISTED_FIELDS: [
      'submit_button'
@@ -457,6 +457,7 @@ class Formbuilder
   @fields: {}
   @inputFields: {}
   @nonInputFields: {}
+  debug: {}
 
   @registerField: (name, opts) ->
     for x in ['view', 'edit']
@@ -476,11 +477,16 @@ class Formbuilder
   saveForm: => #expose an instance method to manually save the data
     @mainView.saveForm()
 
-  debug: {}
+  @config: (options) ->
+    Formbuilder.options = $.extend(true, Formbuilder.options, options)
+    # unregister the unlisted fields
+    if options.UNLISTED_FIELDS
+      Formbuilder.inputFields = _.omit(Formbuilder.inputFields, options.UNLISTED_FIELDS)
+      Formbuilder.nonInputFields = _.omit(Formbuilder.nonInputFields, options.UNLISTED_FIELDS)
 
-  constructor: (opts={}) ->
+  constructor: (instanceOpts={}) ->
     _.extend @, Backbone.Events
-    args = _.extend opts, {formBuilder: @}
+    args = _.extend instanceOpts, {formBuilder: @}
     @mainView = new BuilderView args
     @debug.BuilderView = @mainView
 

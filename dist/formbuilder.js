@@ -679,7 +679,7 @@
       SHOW_SAVE_BUTTON: true,
       WARN_IF_UNSAVED: true,
       FORCE_BOTTOM_SUBMIT: true,
-      REQUIRED_DEFAULT: false,
+      REQUIRED_DEFAULT: true,
       UNLISTED_FIELDS: ['submit_button'],
       mappings: {
         SIZE: 'field_options.size',
@@ -716,6 +716,8 @@
 
     Formbuilder.nonInputFields = {};
 
+    Formbuilder.prototype.debug = {};
+
     Formbuilder.registerField = function(name, opts) {
       var x, _i, _len, _ref7;
       _ref7 = ['view', 'edit'];
@@ -738,16 +740,22 @@
       return this.mainView.saveForm();
     };
 
-    Formbuilder.prototype.debug = {};
+    Formbuilder.config = function(options) {
+      Formbuilder.options = $.extend(true, Formbuilder.options, options);
+      if (options.UNLISTED_FIELDS) {
+        Formbuilder.inputFields = _.omit(Formbuilder.inputFields, options.UNLISTED_FIELDS);
+        return Formbuilder.nonInputFields = _.omit(Formbuilder.nonInputFields, options.UNLISTED_FIELDS);
+      }
+    };
 
-    function Formbuilder(opts) {
+    function Formbuilder(instanceOpts) {
       var args;
-      if (opts == null) {
-        opts = {};
+      if (instanceOpts == null) {
+        instanceOpts = {};
       }
       this.saveForm = __bind(this.saveForm, this);
       _.extend(this, Backbone.Events);
-      args = _.extend(opts, {
+      args = _.extend(instanceOpts, {
         formBuilder: this
       });
       this.mainView = new BuilderView(args);
