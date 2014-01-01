@@ -388,7 +388,6 @@
         return this.$undoDeleteButton.attr('disabled', true).text(Formbuilder.options.dict.NOTHING_TO_UNDO);
       } else {
         topModel = this.undoStack.at(this.undoStack.length - 1).get('model');
-        console.log(Formbuilder.fields);
         lastElType = topModel.get(Formbuilder.options.mappings.FIELD_TYPE);
         lastElLabel = topModel.get(Formbuilder.options.mappings.LABEL);
         return this.$undoDeleteButton.attr('disabled', false).text(Formbuilder.options.dict.UNDO_DELETE(lastElType, lastElLabel));
@@ -743,10 +742,24 @@
     };
 
     Formbuilder.config = function(options) {
+      var data, listed_fields, name, _results;
       Formbuilder.options = $.extend(true, Formbuilder.options, options);
-      if (options.UNLISTED_FIELDS) {
-        Formbuilder.inputFields = _.omit(Formbuilder.inputFields, options.UNLISTED_FIELDS);
-        return Formbuilder.nonInputFields = _.omit(Formbuilder.nonInputFields, options.UNLISTED_FIELDS);
+      if (options.UNLISTED_FIELDS != null) {
+        console.log(Formbuilder.options.UNLISTED_FIELDS);
+        listed_fields = _.omit(Formbuilder.fields, Formbuilder.options.UNLISTED_FIELDS);
+        Formbuilder.inputFields = {};
+        Formbuilder.nonInputFields = {};
+        console.log(listed_fields);
+        _results = [];
+        for (name in listed_fields) {
+          data = listed_fields[name];
+          if (data.type === 'non_input') {
+            _results.push(Formbuilder.nonInputFields[name] = data);
+          } else {
+            _results.push(Formbuilder.inputFields[name] = data);
+          }
+        }
+        return _results;
       }
     };
 

@@ -190,7 +190,6 @@ class BuilderView extends Backbone.View
                         .text(Formbuilder.options.dict.NOTHING_TO_UNDO)
     else
       topModel = @undoStack.at(@undoStack.length - 1).get('model')
-      console.log(Formbuilder.fields)
       lastElType = topModel.get(Formbuilder.options.mappings.FIELD_TYPE)
       lastElLabel = topModel.get(Formbuilder.options.mappings.LABEL)
       @$undoDeleteButton.attr('disabled', false)
@@ -471,7 +470,7 @@ class Formbuilder
     Formbuilder.fields[name] = opts
 
     #register field in edit pane
-    if name not in Formbuilder.options.UNLISTED_FIELDS
+    if name not in Formbuilder.options.UNLISTED_FIELDS # safety net if config is never used
       if opts.type == 'non_input'
         Formbuilder.nonInputFields[name] = opts
       else
@@ -482,10 +481,22 @@ class Formbuilder
 
   @config: (options) ->
     Formbuilder.options = $.extend(true, Formbuilder.options, options)
-    # unregister the unlisted fields
-    if options.UNLISTED_FIELDS
-      Formbuilder.inputFields = _.omit(Formbuilder.inputFields, options.UNLISTED_FIELDS)
-      Formbuilder.nonInputFields = _.omit(Formbuilder.nonInputFields, options.UNLISTED_FIELDS)
+
+    # Set inputFields and nonInputFields to the non-unlisted fields
+    if options.UNLISTED_FIELDS?
+      console.log(Formbuilder.options.UNLISTED_FIELDS)
+      listed_fields = _.omit(Formbuilder.fields, Formbuilder.options.UNLISTED_FIELDS)
+      #clear lists used by the "Add field" view
+      Formbuilder.inputFields = {}
+      Formbuilder.nonInputFields = {}
+      console.log(listed_fields)
+      for name, data of listed_fields
+        if data.type == 'non_input'
+          Formbuilder.nonInputFields[name] = data
+        else
+          Formbuilder.inputFields[name] = data
+      # Formbuilder.inputFields = _.omit(Formbuilder.inputFields, options.UNLISTED_FIELDS)
+      # Formbuilder.nonInputFields = _.omit(Formbuilder.nonInputFields, options.UNLISTED_FIELDS)
 
   constructor: (instanceOpts={}) ->
     _.extend @, Backbone.Events
