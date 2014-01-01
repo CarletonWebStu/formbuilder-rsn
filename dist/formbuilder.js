@@ -388,6 +388,7 @@
         return this.$undoDeleteButton.attr('disabled', true).text(Formbuilder.options.dict.NOTHING_TO_UNDO);
       } else {
         topModel = this.undoStack.at(this.undoStack.length - 1).get('model');
+        console.log(Formbuilder.fields);
         lastElType = topModel.get(Formbuilder.options.mappings.FIELD_TYPE);
         lastElLabel = topModel.get(Formbuilder.options.mappings.LABEL);
         return this.$undoDeleteButton.attr('disabled', false).text(Formbuilder.options.dict.UNDO_DELETE(lastElType, lastElLabel));
@@ -639,10 +640,11 @@
     };
 
     BuilderView.prototype.deleteToStack = function(model) {
-      return this.undoStack.push({
+      this.undoStack.push({
         position: model.indexInDOM(),
-        model: this.collection.remove(model)
+        model: model.clone()
       });
+      return model.destroy();
     };
 
     BuilderView.prototype.undoDelete = function(e) {

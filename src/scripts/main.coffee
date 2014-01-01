@@ -190,6 +190,7 @@ class BuilderView extends Backbone.View
                         .text(Formbuilder.options.dict.NOTHING_TO_UNDO)
     else
       topModel = @undoStack.at(@undoStack.length - 1).get('model')
+      console.log(Formbuilder.fields)
       lastElType = topModel.get(Formbuilder.options.mappings.FIELD_TYPE)
       lastElLabel = topModel.get(Formbuilder.options.mappings.LABEL)
       @$undoDeleteButton.attr('disabled', false)
@@ -394,8 +395,10 @@ class BuilderView extends Backbone.View
   deleteToStack: (model) ->
     @undoStack.push({
       position: model.indexInDOM() #this must be called first, before the model is removed
-      model: @collection.remove(model)
+      # model: @collection.clone(model)
+      model: model.clone()
       })
+    model.destroy()
 
   undoDelete: (e) ->
     restoree = @undoStack.pop()
