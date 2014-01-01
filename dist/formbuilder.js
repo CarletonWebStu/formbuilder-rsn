@@ -476,6 +476,7 @@
         axis: 'y',
         containment: this.$responseFields.parent().parent(),
         placeholder: 'sortable-placeholder',
+        handle: '.cover',
         stop: function(e, ui) {
           var rf;
           if (ui.item.data('field-type')) {
