@@ -53,7 +53,7 @@
 .fb-edit-field-wrapper .js-add-option,.fb-edit-field-wrapper .js-remove-option{padding:3px 6px}
 .fb-edit-field-wrapper .fb-bottom-add{margin-top:8px}
 .fb-common-wrapper .fb-label-description{margin-bottom:10px}
-.fb-edit-field-wrapper .fb-label-description input,.fb-edit-field-wrapper .fb-label-description textarea{width:100%}
+.fb-edit-field-wrapper .fb-label-description input,.fb-edit-field-wrapper .fb-label-description textarea{width:100%;max-width:100%}
 .fb-edit-field-wrapper .fb-label-description textarea{min-height:5em}
 .response-field-draggable-helper{border:1px dashed #ddd;background:#eee}
 .response-field-text input.rf-size-small{width:130px}
