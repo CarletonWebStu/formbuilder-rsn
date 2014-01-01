@@ -484,19 +484,14 @@ class Formbuilder
 
     # Set inputFields and nonInputFields to the non-unlisted fields
     if options.UNLISTED_FIELDS?
-      console.log(Formbuilder.options.UNLISTED_FIELDS)
       listed_fields = _.omit(Formbuilder.fields, Formbuilder.options.UNLISTED_FIELDS)
-      #clear lists used by the "Add field" view
-      Formbuilder.inputFields = {}
+      Formbuilder.inputFields = {} #clear lists used by the "Add field" view
       Formbuilder.nonInputFields = {}
-      console.log(listed_fields)
       for name, data of listed_fields
         if data.type == 'non_input'
           Formbuilder.nonInputFields[name] = data
         else
           Formbuilder.inputFields[name] = data
-      # Formbuilder.inputFields = _.omit(Formbuilder.inputFields, options.UNLISTED_FIELDS)
-      # Formbuilder.nonInputFields = _.omit(Formbuilder.nonInputFields, options.UNLISTED_FIELDS)
 
   constructor: (instanceOpts={}) ->
     _.extend @, Backbone.Events

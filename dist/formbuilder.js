@@ -745,11 +745,9 @@
       var data, listed_fields, name, _results;
       Formbuilder.options = $.extend(true, Formbuilder.options, options);
       if (options.UNLISTED_FIELDS != null) {
-        console.log(Formbuilder.options.UNLISTED_FIELDS);
         listed_fields = _.omit(Formbuilder.fields, Formbuilder.options.UNLISTED_FIELDS);
         Formbuilder.inputFields = {};
         Formbuilder.nonInputFields = {};
-        console.log(listed_fields);
         _results = [];
         for (name in listed_fields) {
           data = listed_fields[name];
