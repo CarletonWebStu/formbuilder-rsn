@@ -1,6 +1,5 @@
 Formbuilder.config({
-  UNLISTED_FIELDS: ['submit_button',
-                    'address',
+  UNLISTED_FIELDS: ['address',
                     'email',
                     'price',
                     'website',

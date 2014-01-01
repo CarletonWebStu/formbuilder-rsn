@@ -10,9 +10,11 @@ Formbuilder.registerField 'text_comment',
   """
 
   edit: """
-    <div class='fb-edit-section-header'>Text</div>
-    <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'
-      placeholder='Add some text'></textarea>
+    <div class='fb-label-description'>
+      <div class='fb-edit-section-header'>Text</div>
+      <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'
+        placeholder='Add some text'></textarea>
+    </div>
   """
 
   addButton: """
