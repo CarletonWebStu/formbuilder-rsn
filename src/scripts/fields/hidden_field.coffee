@@ -10,11 +10,13 @@ Formbuilder.registerField 'hidden_field',
   """
 
   edit: """
-    <div class='fb-edit-section-header'>Label</div>
-    <input type='text' data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>' />
-    <div class='fb-edit-section-header'>Data</div>
-    <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'
-      placeholder='Add some data to this hidden field'></textarea>
+    <div class='fb-label-description'>
+      <div class='fb-edit-section-header'>Label</div>
+      <input type='text' data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>' />
+      <div class='fb-edit-section-header'>Data</div>
+      <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'
+        placeholder='Add some data to this hidden field'></textarea>
+    </div>
   """
 
   addButton: """
