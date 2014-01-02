@@ -1,4 +1,4 @@
-Formbuilder.js (Reason fork)
+Formbuilder.js (Reason CMS fork)
 ============
 
 Formbuilder is a graphical interface for letting users build their own webforms. Think Wufoo or Google Forms, but a lightweight component that can be integrated into your application.
@@ -17,7 +17,7 @@ JSlote/formbuilder, in particular, is concerned with flexibility.
 
 ## Fork-specific information
 
-This fork is a close cousin to JSlote/formbuilder. It includes alterations to specific fields to make then compatible with the Reason CMS web form management system. All Reason-specific development and pull requests should be directed at this fork, but any new features/bugfixes should be directed at JSlote/formbuilder.
+This fork is a close cousin to JSlote/formbuilder. It includes alterations to specific fields to make then compatible with the [Reason CMS](http://apps.carleton.edu/opensource/reason/) web form management system. All Reason-specific development and pull requests should be directed at this fork, but any new features/bugfixes should be directed at JSlote/formbuilder.
 
 ## Basic usage
 ```
