@@ -17,8 +17,12 @@ Formbuilder.registerField 'dropdown',
   """
 
   edit: """
-    <%= Formbuilder.templates['edit/options']({ includeBlank: true }) %>
+    <%= Formbuilder.templates['edit/options']() %>
   """
+
+  ###was:  """
+    <%= Formbuilder.templates['edit/options']({ includeBlank: true }) %>
+  """###
 
   addButton: """
     <span class="symbol"><span class="fa fa-caret-down"></span></span> Dropdown

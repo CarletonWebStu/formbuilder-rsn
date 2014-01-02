@@ -1,5 +1,5 @@
 Formbuilder.config({
-  UNLISTED_FIELDS: ['submit',
+  UNLISTED_FIELDS: ['submit_button',
                     'date',
                     'time',
                     'number',
@@ -10,5 +10,7 @@ Formbuilder.config({
                     'file',
                     'section_break'],
   SHOW_SAVE_BUTTON: false,
-  FORCE_BOTTOM_SUBMIT: true
+  WARN_IF_UNSAVED: false,
+  FORCE_BOTTOM_SUBMIT: true,
+  REQUIRED_DEFAULT: false
 })
