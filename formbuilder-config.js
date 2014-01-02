@@ -1,9 +1,14 @@
 Formbuilder.config({
-  UNLISTED_FIELDS: ['address',
+  UNLISTED_FIELDS: ['submit',
+                    'date',
+                    'time',
+                    'number',
+                    'website',
                     'email',
                     'price',
-                    'website',
-                    'file'],
+                    'address',
+                    'file',
+                    'section_break'],
   SHOW_SAVE_BUTTON: false,
-  FORCE_BOTTOM_SUBMIT: false
+  FORCE_BOTTOM_SUBMIT: true
 })
