@@ -1,9 +1,9 @@
-Formbuilder.js (JSlote fork)
+Formbuilder.js (Reason fork)
 ============
 
 Formbuilder is a graphical interface for letting users build their own webforms. Think Wufoo or Google Forms, but a lightweight component that can be integrated into your application.
 
-This fork, in particular, is concerned with flexibility.
+JSlote/formbuilder, in particular, is concerned with flexibility.
 * Touch is supported.
 * Fields in the palette may be shown to the user depending on their support in the rest of your system.
 * Almost every feature can be turned off with an easy switch.
@@ -13,7 +13,11 @@ This fork, in particular, is concerned with flexibility.
 *Formbuilder.js only handles the client-side logic of creating a form. It will output a structured JSON representation of your form, but saving the form, rendering it on the server, and storing users' responses is all up to you. If you're using Rails, there is also [Formbuilder.rb](https://github.com/dobtco/formbuilder-rb), a Rails engine that's designed to provide this server-side functionality.*
 
 ## Demo of this fork
-[Click here](http://jslote.github.io/formbuilder/) to see Formbuilder in action.
+[Click here](http://jslote.github.io/formbuilder-rsn/) to see Formbuilder in action.
+
+## Fork-specific information
+
+This fork is a close cousin to JSlote/formbuilder. It includes alterations to specific fields to make then compatible with the Reason CMS web form management system. All Reason-specific development and pull requests should be directed at this fork, but any new features/bugfixes should be directed at JSlote/formbuilder.
 
 ## Basic usage
 ```
@@ -144,6 +148,12 @@ Next, clone this repository. From inside the `formbuilder/` directory, run these
 2. `bower install` - installs the runtime dependencies (JS)
 3. `grunt watch` - begin reactive compiling
 4. open `example/index.html` and you're all set!
+
+It may also make sense to run the following to merge any changes from JSlote/formbuilder to into your local repo:
+```
+git remote add upstream https://github.com/JSlote/formbuilder.git
+git pull upstream gh-pages
+```
 
 There is a sublime-project file for Sublime Text 3, if that is your editor of choice.
 
