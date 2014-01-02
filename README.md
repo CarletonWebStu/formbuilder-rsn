@@ -17,7 +17,7 @@ JSlote/formbuilder, in particular, is concerned with flexibility.
 
 ## Fork-specific information
 
-This fork is a close cousin to JSlote/formbuilder. It includes alterations to specific fields to make then compatible with the [Reason CMS](http://apps.carleton.edu/opensource/reason/) web form management system. All Reason-specific development and pull requests should be directed at this fork, but any new features/bugfixes should be directed at JSlote/formbuilder.
+This fork is a close cousin to JSlote/formbuilder. It includes alterations to specific fields that make them compatible with the [Reason CMS](http://apps.carleton.edu/opensource/reason/) web form management system. All Reason CMS-specific development and pull requests should be directed at this fork, but any new features/bugfixes should be directed at JSlote/formbuilder.
 
 ## Basic usage
 ```
