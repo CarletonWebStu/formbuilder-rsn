@@ -49,7 +49,7 @@ module.exports = (grunt) ->
             '<%= srcFolder %>/scripts/underscore_mixins.coffee'
             '<%= srcFolder %>/scripts/rivets-config.coffee'
             '<%= srcFolder %>/scripts/main.coffee'
-            '<%= srcFolder %>/scripts/fields/*.coffee'
+            '<%= srcFolder %>/scripts/fields/**/*.coffee'
           ]
 
     concat:
