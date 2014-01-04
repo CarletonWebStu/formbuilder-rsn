@@ -920,11 +920,7 @@
     """
     */
 
-    addButton: "<span class=\"symbol\">&#182;</span> Paragraph",
-    defaultAttributes: function(attrs) {
-      _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small');
-      return attrs;
-    }
+    addButton: "<span class=\"symbol\">&#182;</span> Paragraph"
   });
 
 }).call(this);
@@ -1003,11 +999,7 @@
     """
     */
 
-    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> Text",
-    defaultAttributes: function(attrs) {
-      _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small');
-      return attrs;
-    }
+    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> Text"
   });
 
 }).call(this);

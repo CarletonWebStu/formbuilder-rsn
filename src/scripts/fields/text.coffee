@@ -17,7 +17,8 @@ Formbuilder.registerField 'text',
     <span class='symbol'><span class='fa fa-font'></span></span> Text
   """
 
-  defaultAttributes: (attrs) ->
-    _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')
-
-    attrs
+  # defaultAttributes: (attrs) ->
+  #   _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')
+  #
+  #   attrs
+#

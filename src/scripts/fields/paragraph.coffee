@@ -17,7 +17,8 @@ Formbuilder.registerField 'paragraph',
     <span class="symbol">&#182;</span> Paragraph
   """
 
-  defaultAttributes: (attrs) ->
-    _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')
-
-    attrs
+  # defaultAttributes: (attrs) ->
+  #   _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')
+  #
+  #   attrs
+#
