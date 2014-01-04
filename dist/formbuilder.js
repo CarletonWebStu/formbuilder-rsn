@@ -336,6 +336,9 @@
     BuilderView.prototype.initialize = function(options) {
       var newSubmit, selector, setter, _ref7, _ref8;
       selector = options.selector, this.formBuilder = options.formBuilder, this.bootstrapData = options.bootstrapData;
+      if (!(this.bootstrapData instanceof Array)) {
+        this.bootstrapData = this.bootstrapData.fields;
+      }
       if (selector != null) {
         this.setElement($(selector));
       }
