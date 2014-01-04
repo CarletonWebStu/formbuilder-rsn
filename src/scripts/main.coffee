@@ -164,7 +164,6 @@ class BuilderView extends Backbone.View
       setter = {}
       setter[Formbuilder.options.mappings.LABEL]       = 'Submit'
       setter[Formbuilder.options.mappings.FIELD_TYPE]  = 'submit_button'
-      setter[Formbuilder.options.mappings.DESCRIPTION] = 'Submit'
       newSubmit.set(setter)
       @collection.push(newSubmit)
     @initAutosave()

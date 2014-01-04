@@ -5,12 +5,12 @@ Formbuilder.registerField 'submit_button',
   type: 'non_input'
 
   view: """
-    <button><%= rf.get(Formbuilder.options.mappings.DESCRIPTION) %></button>
+    <button><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>
   """
 
   edit: """
     <div class='fb-edit-section-header'>Button Label</div>
-    <input type="text" data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'></input>
+    <input type="text" data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>'></input>
   """
 
   addButton: """
@@ -19,6 +19,5 @@ Formbuilder.registerField 'submit_button',
 
   defaultAttributes: (attrs) ->
     _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Submit')
-    _.pathAssign(attrs, Formbuilder.options.mappings.DESCRIPTION, 'Submit')
 
     attrs
