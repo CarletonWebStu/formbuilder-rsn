@@ -139,6 +139,9 @@ class BuilderView extends Backbone.View
   initialize: (options) ->
     {selector, @formBuilder, @bootstrapData} = options
 
+    if (!(@bootstrapData instanceof Array))
+      @bootstrapData = @bootstrapData.fields
+
     # This is a terrible idea because it's not scoped to this view.
     if selector?
       @setElement $(selector)
