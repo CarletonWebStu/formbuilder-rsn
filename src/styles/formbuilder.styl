@@ -229,6 +229,21 @@ $editing-border = darken($editing-bg, 7%)
   border: none;
 }
 
+.fb-edit-field-wrapper .js-drag-handle {
+  background-color: lightgray;
+  padding-left: 6px;
+  padding-right: 6px;
+  font-size: 18px;
+  cursor: -webkit-grab;
+  cursor: -moz-grab;
+  cursor: grab;
+
+  &:before {
+	// see http://character-code.com/arrows-html-codes.php
+    content: '\2195';
+  }
+}
+
 .fb-field-wrapper .actions-wrapper a.js-clear,
 .fb-edit-field-wrapper .js-remove-option {
   background-color: $negative-color;

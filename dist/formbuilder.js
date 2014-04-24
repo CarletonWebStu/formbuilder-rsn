@@ -254,13 +254,68 @@
     };
 
     EditFieldView.prototype.render = function() {
+      var _ref6,
+        _this = this;
       this.$el.html(Formbuilder.templates["edit/base" + (!this.model.is_input() ? '_non_input' : '')]({
         rf: this.model
       }));
       rivets.bind(this.$el, {
         model: this.model
       });
+      if (((_ref6 = this.model.attributes.field_type) === "radio" || _ref6 === "dropdown" || _ref6 === "checkboxes")) {
+        setTimeout((function() {
+          return $(".sortableParentContainer").sortable({
+            axis: "y",
+            start: (function(evt, ui) {
+              return ui.item.preservedStartPos = ui.item.index();
+            }),
+            stop: (function(evt, ui) {
+              return _this.completedOptionDrag(evt, ui);
+            }),
+            handle: ".js-drag-handle"
+          });
+        }), 10);
+      }
       return this;
+    };
+
+    EditFieldView.prototype.debugOptions = function(opts) {
+      var o, rv, _i, _len;
+      rv = "";
+      for (_i = 0, _len = opts.length; _i < _len; _i++) {
+        o = opts[_i];
+        if (rv !== "") {
+          rv += ",";
+        }
+        rv += o.label;
+      }
+      rv += " (" + opts.length + " elements)";
+      return rv;
+    };
+
+    EditFieldView.prototype.completedOptionDrag = function(evt, ui) {
+      var mover, newIdx, oldIdx, options, _ref6;
+      _ref6 = [ui.item.preservedStartPos, ui.item.index()], oldIdx = _ref6[0], newIdx = _ref6[1];
+      /*
+      this is the funky part. I think the options template (which is a combination of Backbone and Rivets tech) and the JQuery DOM
+      manipulation are stomping on each other. Below I am going to update the OPTIONS model and trigger the appropriate events,
+      but this was causing weird behavior -- the right hand side of the page would show the correct new order, but the left hand side
+      was out of wack. So, now we'll just use JQuery sortable up to this point -- we capture the old/new indices of the item we dragged,
+      and then we cancel JQuery's work completely. THEN we'll update the model ourselves using that data, and notify interested parties.
+      
+      Maybe there is some way to keep JQuery/Rivets/Backbone in sync with one another but with basically zero knowledge of how the latter
+      two of those three pieces of software function that is a slog of a debugging process and this works just fine.
+      */
+
+      $(".sortableParentContainer").sortable('cancel');
+      options = this.model.get(Formbuilder.options.mappings.OPTIONS);
+      if (oldIdx !== newIdx) {
+        mover = options.splice(oldIdx, 1)[0];
+        options.splice(newIdx, 0, mover);
+      }
+      this.model.set(Formbuilder.options.mappings.OPTIONS, options);
+      this.model.trigger("change:" + Formbuilder.options.mappings.OPTIONS);
+      return this.forceRender();
     };
 
     EditFieldView.prototype.remove = function() {
@@ -1184,13 +1239,13 @@ __p += '\n  <label>\n    <input type=\'checkbox\' data-rv-checked=\'model.' +
 ((__t = ( Formbuilder.options.mappings.INCLUDE_BLANK )) == null ? '' : __t) +
 '\' />\n    Include blank\n  </label>\n';
  } ;
-__p += '\n\n<div class=\'option\' data-rv-each-option=\'model.' +
+__p += '\n\n<div class=\'sortableParentContainer\'>\n\t<div class=\'option sortableElement\' data-rv-each-option=\'model.' +
 ((__t = ( Formbuilder.options.mappings.OPTIONS )) == null ? '' : __t) +
-'\'>\n  <input type="checkbox" class=\'js-default-updated\' data-rv-checked="option:checked" />\n  <input type="text" data-rv-input="option:label" class=\'option-label-input\' />\n  <a class="js-add-option ' +
+'\'>\n\t  <input type="checkbox" class=\'js-default-updated\' data-rv-checked="option:checked" />\n\t  <input type="text" data-rv-input="option:label" class=\'option-label-input\' />\n\t  <a class="js-add-option ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
-'" title="Add Option"><i class=\'fa fa-plus-circle\'></i></a>\n  <a class="js-remove-option ' +
+'" title="Add Option"><i class=\'fa fa-plus-circle\'></i></a>\n\t  <a class="js-remove-option ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
-'" title="Remove Option"><i class=\'fa fa-minus-circle\'></i></a>\n</div>\n\n';
+'" title="Remove Option"><i class=\'fa fa-minus-circle\'></i></a>\n\t  <span class="js-drag-handle"></span>\n\t</div>\n</div>\n\n';
  if (typeof includeOther !== 'undefined'){ ;
 __p += '\n  <label>\n    <input type=\'checkbox\' data-rv-checked=\'model.' +
 ((__t = ( Formbuilder.options.mappings.INCLUDE_OTHER )) == null ? '' : __t) +

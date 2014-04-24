@@ -83,7 +83,52 @@ class EditFieldView extends Backbone.View
   render: ->
     @$el.html(Formbuilder.templates["edit/base#{if !@model.is_input() then '_non_input' else ''}"]({rf: @model}))
     rivets.bind @$el, { model: @model }
+
+    # if it's type with options, we also need to turn on JQuery sortability. This needs a slight delay to function else the JQuery selector comes back empty
+    if (@model.attributes.field_type in ["radio", "dropdown", "checkboxes"])
+      setTimeout((=>
+        $(".sortableParentContainer").sortable({
+                                                axis: "y",
+                                                start: ((evt, ui) -> ui.item.preservedStartPos = ui.item.index()),
+                                                stop: ((evt, ui) => @completedOptionDrag(evt, ui)),
+                                                handle: ".js-drag-handle"})
+      ), 10)
     return @
+  
+  debugOptions: (opts) ->
+    rv = ""
+    for o in opts
+      if rv isnt ""
+        rv += ","
+      rv += o.label
+
+    rv += " (#{opts.length} elements)"
+    rv
+
+  completedOptionDrag: (evt, ui) ->
+    [oldIdx,newIdx] = [ui.item.preservedStartPos,ui.item.index()]
+    # console.log "completed drag from [" + oldIdx + "] to [" + newIdx + "]"
+
+    ###
+    this is the funky part. I think the options template (which is a combination of Backbone and Rivets tech) and the JQuery DOM
+    manipulation are stomping on each other. Below I am going to update the OPTIONS model and trigger the appropriate events,
+    but this was causing weird behavior -- the right hand side of the page would show the correct new order, but the left hand side
+    was out of wack. So, now we'll just use JQuery sortable up to this point -- we capture the old/new indices of the item we dragged,
+    and then we cancel JQuery's work completely. THEN we'll update the model ourselves using that data, and notify interested parties.
+    
+    Maybe there is some way to keep JQuery/Rivets/Backbone in sync with one another but with basically zero knowledge of how the latter
+    two of those three pieces of software function that is a slog of a debugging process and this works just fine.
+    ###
+    $(".sortableParentContainer").sortable('cancel')
+
+    options = @model.get(Formbuilder.options.mappings.OPTIONS)
+    if (oldIdx isnt newIdx)
+      mover = options.splice(oldIdx, 1)[0]
+      options.splice(newIdx, 0, mover)
+
+    @model.set Formbuilder.options.mappings.OPTIONS, options          # this line updates the model
+    @model.trigger "change:#{Formbuilder.options.mappings.OPTIONS}"   # this line re-renders the template controlling the left hand side interface
+    @forceRender()                                                    # this line re-renders the right hand side representation of the model
 
   remove: ->
     @parentView.editView = undefined
