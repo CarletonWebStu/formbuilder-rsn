@@ -329,10 +329,7 @@
       $el = $(e.currentTarget);
       i = this.$el.find('.option').index($el.closest('.option'));
       options = this.model.get(Formbuilder.options.mappings.OPTIONS) || [];
-      newOption = {
-        label: "",
-        checked: false
-      };
+      newOption = Formbuilder.generateSingleDefaultOption();
       if (i > -1) {
         options.splice(i + 1, 0, newOption);
       } else {
@@ -664,6 +661,7 @@
       this.saveFormButton.attr('disabled', true).text(Formbuilder.options.dict.ALL_CHANGES_SAVED);
       this.collection.sort();
       payload = JSON.stringify({
+        maxUsedOptionId: Formbuilder.getHighestUsedUniqueOptionId(),
         fields: this.collection.toJSON()
       });
       if (Formbuilder.options.HTTP_ENDPOINT) {
@@ -729,6 +727,29 @@
       simple_format: function(x) {
         return x != null ? x.replace(/\n/g, '<br />') : void 0;
       }
+    };
+
+    /*
+    consistent, unique option id. We will default to "1" and if there is data in the bootstrap payload we will update this value later (see 
+    preprocessBootstrapDataForOptionsValidity which calls setHighestUniqueOptionId. Basically we want to preserve the unique option id's across
+    editing sessions. At the moment it doesn't really matter as our reason forms can't be edited once data is in the db, but if we ever 
+    want to change that, it will be useful to be able to know that once an option is defined, it will have the same id for the life of the form
+    across edits, and even if deletions/additions are made to other option'able form elements, we will not reuse id's.
+    */
+
+
+    Formbuilder.uniqueOptionId = 1;
+
+    Formbuilder.setHighestUniqueOptionId = function(x) {
+      return Formbuilder.uniqueOptionId = x;
+    };
+
+    Formbuilder.getHighestUsedUniqueOptionId = function() {
+      return Formbuilder.uniqueOptionId - 1;
+    };
+
+    Formbuilder.getNextUniqueOptionId = function() {
+      return Formbuilder.uniqueOptionId++;
     };
 
     Formbuilder.options = {
@@ -819,6 +840,87 @@
       }
     };
 
+    /*
+    previously generating a {label:"",checked:false} option was spread over a few locations...each of the radio/dropdown/checkboxes scripts had this logic for creating
+    an array of starter data, and the addOption function had it as well. Especially with the addition of the "reasonOptionId" field this was getting out of hand. 
+    Not the most elegant fix, but breaking it into this single function and adding a helper method for creating an array of them for the field scripts to hook into.
+    */
+
+
+    Formbuilder.generateSingleDefaultOption = function() {
+      return {
+        label: "",
+        checked: false,
+        reasonOptionId: Formbuilder.getNextUniqueOptionId()
+      };
+    };
+
+    Formbuilder.generateDefaultOptionsArray = function() {
+      var i, rv, _i;
+      rv = [];
+      for (i = _i = 0; _i <= 1; i = ++_i) {
+        rv.push(Formbuilder.generateSingleDefaultOption());
+      }
+      return rv;
+    };
+
+    /*
+    the individual options that make up a radiobutton/dropdown/checkbox element all need unique id elements.
+    Since this is getting bolted onto Formbuilder, this method ensures that any supplied bootstrap data 
+    has id's on all elements, and that the maxUsedOptionId param, if missing, is calculated properly.
+    
+    Note that similar logic exists on the PHP side so much of this is just being overly cautious...although
+    it also allows us to stay closer to the main formbuilder codebase with just this shim in the middle.
+    */
+
+
+    Formbuilder.prototype.preprocessBootstrapDataForOptionsValidity = function(args) {
+      var bootstrapData, explicitMaxUsedId, f, fields, i, maxIdActuallyFound, maxIdToProceedWith, opt, someOptionsNeedIds, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref7, _ref8;
+      bootstrapData = args.bootstrapData;
+      explicitMaxUsedId = 0;
+      if ((bootstrapData.maxUsedOptionId != null)) {
+        explicitMaxUsedId = bootstrapData.maxUsedOptionId;
+      }
+      if (bootstrapData instanceof Array) {
+        fields = bootstrapData;
+      } else {
+        fields = bootstrapData.fields;
+      }
+      someOptionsNeedIds = false;
+      maxIdActuallyFound = 0;
+      for (i = _i = 0, _len = fields.length; _i < _len; i = ++_i) {
+        f = fields[i];
+        if ((f.field_options != null) && (f.field_options.options != null)) {
+          _ref7 = f.field_options.options;
+          for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
+            opt = _ref7[_j];
+            if (opt.reasonOptionId == null) {
+              someOptionsNeedIds = true;
+            } else {
+              maxIdActuallyFound = Math.max(maxIdActuallyFound, opt.reasonOptionId);
+            }
+          }
+        }
+      }
+      maxIdToProceedWith = Math.max(maxIdActuallyFound, explicitMaxUsedId);
+      maxIdToProceedWith++;
+      if (someOptionsNeedIds) {
+        for (i = _k = 0, _len2 = fields.length; _k < _len2; i = ++_k) {
+          f = fields[i];
+          if ((f.field_options != null) && (f.field_options.options != null)) {
+            _ref8 = f.field_options.options;
+            for (_l = 0, _len3 = _ref8.length; _l < _len3; _l++) {
+              opt = _ref8[_l];
+              if (opt.reasonOptionId == null) {
+                opt.reasonOptionId = maxIdToProceedWith++;
+              }
+            }
+          }
+        }
+      }
+      return Formbuilder.setHighestUniqueOptionId(maxIdToProceedWith);
+    };
+
     function Formbuilder(instanceOpts) {
       var args;
       if (instanceOpts == null) {
@@ -829,6 +931,7 @@
       args = _.extend(instanceOpts, {
         formBuilder: this
       });
+      this.preprocessBootstrapDataForOptionsValidity(args);
       this.mainView = new BuilderView(args);
       this.debug.BuilderView = this.mainView;
     }
@@ -869,15 +972,7 @@
 
     addButton: "<span class=\"symbol\"><span class=\"fa fa-check-square-o\"></span></span> Checkboxes",
     defaultAttributes: function(attrs) {
-      _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, [
-        {
-          label: "",
-          checked: false
-        }, {
-          label: "",
-          checked: false
-        }
-      ]);
+      _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       return attrs;
     }
   });
@@ -906,15 +1001,7 @@
 
     addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> Dropdown",
     defaultAttributes: function(attrs) {
-      _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, [
-        {
-          label: "",
-          checked: false
-        }, {
-          label: "",
-          checked: false
-        }
-      ]);
+      _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       _.pathAssign(attrs, Formbuilder.options.mappings.INCLUDE_BLANK, false);
       return attrs;
     }
@@ -1005,15 +1092,7 @@
 
     addButton: "<span class=\"symbol\"><span class=\"fa fa-circle-o\"></span></span> Multiple Choice",
     defaultAttributes: function(attrs) {
-      _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, [
-        {
-          label: "",
-          checked: false
-        }, {
-          label: "",
-          checked: false
-        }
-      ]);
+      _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       return attrs;
     }
   });
@@ -1348,7 +1427,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n</div>';
+'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\tfb.saveForm()\n\t}\n  </script>\n\n  <input type="button" onClick="debugMe();" value="DEBUG">\n</div>\n';
 
 }
 return __p

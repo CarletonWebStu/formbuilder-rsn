@@ -32,13 +32,7 @@ Formbuilder.registerField 'dropdown',
   """
 
   defaultAttributes: (attrs) ->
-    _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, [
-        label: "",
-        checked: false
-      ,
-        label: "",
-        checked: false
-      ])
+    _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray())
     _.pathAssign(attrs, Formbuilder.options.mappings.INCLUDE_BLANK, false)
 
     attrs

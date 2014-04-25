@@ -39,12 +39,6 @@ Formbuilder.registerField 'radio',
   """
 
   defaultAttributes: (attrs) ->
-    _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, [
-        label: "",
-        checked: false
-      ,
-        label: "",
-        checked: false
-      ])
+    _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray())
 
     attrs

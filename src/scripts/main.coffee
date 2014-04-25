@@ -140,7 +140,8 @@ class EditFieldView extends Backbone.View
     $el = $(e.currentTarget)
     i = @$el.find('.option').index($el.closest('.option'))
     options = @model.get(Formbuilder.options.mappings.OPTIONS) || []
-    newOption = {label: "", checked: false}
+
+    newOption = Formbuilder.generateSingleDefaultOption()
 
     if i > -1
       options.splice(i + 1, 0, newOption)
@@ -418,7 +419,7 @@ class BuilderView extends Backbone.View
     @formSaved = true
     @saveFormButton.attr('disabled', true).text(Formbuilder.options.dict.ALL_CHANGES_SAVED)
     @collection.sort()
-    payload = JSON.stringify fields: @collection.toJSON()
+    payload = JSON.stringify {maxUsedOptionId: Formbuilder.getHighestUsedUniqueOptionId(), fields: @collection.toJSON()}
 
     if Formbuilder.options.HTTP_ENDPOINT then @doAjaxSave(payload)
     @formBuilder.trigger 'save', payload
@@ -464,6 +465,24 @@ class Formbuilder
     simple_format: (x) ->
       x?.replace(/\n/g, '<br />')
 
+  ###
+  consistent, unique option id. We will default to "1" and if there is data in the bootstrap payload we will update this value later (see 
+  preprocessBootstrapDataForOptionsValidity which calls setHighestUniqueOptionId. Basically we want to preserve the unique option id's across
+  editing sessions. At the moment it doesn't really matter as our reason forms can't be edited once data is in the db, but if we ever 
+  want to change that, it will be useful to be able to know that once an option is defined, it will have the same id for the life of the form
+  across edits, and even if deletions/additions are made to other option'able form elements, we will not reuse id's.
+  ###
+  @uniqueOptionId = 1
+
+  @setHighestUniqueOptionId: (x) ->
+    Formbuilder.uniqueOptionId = x
+
+  @getHighestUsedUniqueOptionId: ->
+    return Formbuilder.uniqueOptionId - 1
+
+  @getNextUniqueOptionId: ->
+    return Formbuilder.uniqueOptionId++
+    
   @options:
     BUTTON_CLASS: 'fb-button'
     HTTP_ENDPOINT: ''
@@ -541,9 +560,72 @@ class Formbuilder
         else
           Formbuilder.inputFields[name] = data
 
+  ###
+  previously generating a {label:"",checked:false} option was spread over a few locations...each of the radio/dropdown/checkboxes scripts had this logic for creating
+  an array of starter data, and the addOption function had it as well. Especially with the addition of the "reasonOptionId" field this was getting out of hand. 
+  Not the most elegant fix, but breaking it into this single function and adding a helper method for creating an array of them for the field scripts to hook into.
+  ###
+  @generateSingleDefaultOption: ->
+    return {label:"", checked:false, reasonOptionId:Formbuilder.getNextUniqueOptionId()}
+
+  @generateDefaultOptionsArray: ->
+    rv = []
+    for i in [0..1]
+      rv.push(Formbuilder.generateSingleDefaultOption())
+    return rv
+
+  ###
+  the individual options that make up a radiobutton/dropdown/checkbox element all need unique id elements.
+  Since this is getting bolted onto Formbuilder, this method ensures that any supplied bootstrap data 
+  has id's on all elements, and that the maxUsedOptionId param, if missing, is calculated properly.
+
+  Note that similar logic exists on the PHP side so much of this is just being overly cautious...although
+  it also allows us to stay closer to the main formbuilder codebase with just this shim in the middle.
+  ###
+  preprocessBootstrapDataForOptionsValidity: (args) ->
+    # console.log args
+    bootstrapData = args.bootstrapData
+    explicitMaxUsedId = 0
+    if (bootstrapData.maxUsedOptionId?)
+      explicitMaxUsedId = bootstrapData.maxUsedOptionId
+
+    # can we trust the explicit max id, or should we check just in case? For now, since this is
+    # only in an admin tool, we err on the side of caution and check just to be sure.
+
+    if (bootstrapData instanceof Array)
+      fields = bootstrapData
+    else
+      fields = bootstrapData.fields
+
+    someOptionsNeedIds = false
+    maxIdActuallyFound = 0
+    for f,i in fields
+      # console.log "checking [" + i + "]/[" + f.field_type + "]..."
+      if f.field_options? and f.field_options.options?
+        for opt in f.field_options.options
+          if (!opt.reasonOptionId?)
+            someOptionsNeedIds = true
+          else
+            maxIdActuallyFound = Math.max(maxIdActuallyFound, opt.reasonOptionId)
+    
+    # console.log "finished first pass; max id found was [" + maxIdActuallyFound + "], explicitMaxUsedId was [" + explicitMaxUsedId + "]"
+
+    maxIdToProceedWith = Math.max(maxIdActuallyFound, explicitMaxUsedId)
+    maxIdToProceedWith++ # advance so it's unique
+
+    if someOptionsNeedIds
+      for f,i in fields
+        if f.field_options? and f.field_options.options?
+          for opt in f.field_options.options
+            if (!opt.reasonOptionId?)
+              opt.reasonOptionId = maxIdToProceedWith++
+
+    Formbuilder.setHighestUniqueOptionId(maxIdToProceedWith)
+
   constructor: (instanceOpts={}) ->
     _.extend @, Backbone.Events
     args = _.extend instanceOpts, {formBuilder: @}
+    @preprocessBootstrapDataForOptionsValidity(args)
     @mainView = new BuilderView args
     @debug.BuilderView = @mainView
 
