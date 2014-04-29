@@ -35,14 +35,16 @@
 <body>
   <div class='fb-main'></div>
 
-  <script src="vendor/js/vendor.js"></script>
+  <script src="vendor/js/vendor-standalone.js"></script>
   <script src="dist/formbuilder.js"></script>
   <script src="formbuilder-config.js"></script>
 
   <script>
     $(function(){
       fb = new Formbuilder({
-        selector: '.fb-main'
+        selector: '.fb-main',
+        bootstrapData: [{"label":"Please enter your clearance number","field_type":"text","required":true,"field_options":{},"cid":"c6"},{"label":"Security personnel #82?","field_type":"radio","required":true,"field_options":{"options":[{"label":"Yes","reasonOptionId":7,"checked":false},{"label":"No","checked":false}],"include_other_option":true},"cid":"c10"},{"label":"Medical history","field_type":"file","required":true,"field_options":{},"cid":"c14"}]
+        // bootstrapData: []
       });
 
       fb.on('save', function(payload){

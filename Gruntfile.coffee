@@ -1,4 +1,4 @@
-ALL_TASKS = ['jst:all', 'coffee:all', 'concat:all', 'stylus:all', 'clean:compiled']
+ALL_TASKS = ['jst:all', 'coffee:all', 'concat:forReason', 'concat:standalone', 'stylus:all', 'clean:compiled']
 
 # formbuilder.js must be compiled in this order:
 # 1. rivets-config
@@ -53,10 +53,10 @@ module.exports = (grunt) ->
           ]
 
     concat:
-      all:
+      standalone:
         files:
           '<%= distFolder %>/formbuilder.js': '<%= compiledFolder %>/*.js'
-          '<%= vendorFolder %>/js/vendor.js': [
+          '<%= vendorFolder %>/js/vendor-standalone.js': [
             'bower_components/jquery/jquery.js'
             'bower_components/jquery-ui/ui/jquery.ui.core.js'
             'bower_components/jquery-ui/ui/jquery.ui.widget.js'
@@ -64,6 +64,19 @@ module.exports = (grunt) ->
             'bower_components/jquery-ui/ui/jquery.ui.draggable.js'
             'bower_components/jquery-ui/ui/jquery.ui.droppable.js'
             'bower_components/jquery-ui/ui/jquery.ui.sortable.js'
+            'bower_components/jquery-ui-touch-punch-improved/jquery.ui.touch-punch-improved.js'
+            'bower_components/jquery.scrollWindowTo/index.js'
+            'bower_components/underscore/underscore-min.js'
+            'bower_components/underscore.mixin.deepExtend/index.js'
+            'bower_components/rivets/dist/rivets.js'
+            'bower_components/backbone/backbone.js'
+            'bower_components/backbone-deep-model/src/deep-model.js'
+          ]
+      forReason:
+        files:
+          '<%= distFolder %>/formbuilder.js': '<%= compiledFolder %>/*.js'
+          '<%= vendorFolder %>/js/vendor.js': [
+            # removing jquery/jquery-ui as we already include those in Reason. For testing locally in index.html, use vendor-standalone.js
             'bower_components/jquery-ui-touch-punch-improved/jquery.ui.touch-punch-improved.js'
             'bower_components/jquery.scrollWindowTo/index.js'
             'bower_components/underscore/underscore-min.js'
@@ -90,6 +103,9 @@ module.exports = (grunt) ->
         ['<%= compiledFolder %>']
 
     uglify:
+      options: {
+        mangle: true
+      },
       dist:
         files:
           '<%= distFolder %>/formbuilder-min.js': '<%= distFolder %>/formbuilder.js'
