@@ -661,7 +661,6 @@
       this.saveFormButton.attr('disabled', true).text(Formbuilder.options.dict.ALL_CHANGES_SAVED);
       this.collection.sort();
       payload = JSON.stringify({
-        maxUsedOptionId: Formbuilder.getHighestUsedUniqueOptionId(),
         fields: this.collection.toJSON()
       });
       if (Formbuilder.options.HTTP_ENDPOINT) {
@@ -729,27 +728,8 @@
       }
     };
 
-    /*
-    consistent, unique option id. We will default to "1" and if there is data in the bootstrap payload we will update this value later (see 
-    preprocessBootstrapDataForOptionsValidity which calls setHighestUniqueOptionId. Basically we want to preserve the unique option id's across
-    editing sessions. At the moment it doesn't really matter as our reason forms can't be edited once data is in the db, but if we ever 
-    want to change that, it will be useful to be able to know that once an option is defined, it will have the same id for the life of the form
-    across edits, and even if deletions/additions are made to other option'able form elements, we will not reuse id's.
-    */
-
-
-    Formbuilder.uniqueOptionId = 1;
-
-    Formbuilder.setHighestUniqueOptionId = function(x) {
-      return Formbuilder.uniqueOptionId = x;
-    };
-
-    Formbuilder.getHighestUsedUniqueOptionId = function() {
-      return Formbuilder.uniqueOptionId - 1;
-    };
-
     Formbuilder.getNextUniqueOptionId = function() {
-      return Formbuilder.uniqueOptionId++;
+      return _.uniqueId("c");
     };
 
     Formbuilder.options = {
@@ -865,9 +845,12 @@
     };
 
     /*
+    (take 2: no need to pass around the "maxUsedOptionId" param on the xml. Instead we'll just assign a new guaranteed unique name via
+    Underscore's uniqueId method.)
+    
     the individual options that make up a radiobutton/dropdown/checkbox element all need unique id elements.
     Since this is getting bolted onto Formbuilder, this method ensures that any supplied bootstrap data 
-    has id's on all elements, and that the maxUsedOptionId param, if missing, is calculated properly.
+    has id's on all elements.
     
     Note that similar logic exists on the PHP side so much of this is just being overly cautious...although
     it also allows us to stay closer to the main formbuilder codebase with just this shim in the middle.
@@ -875,50 +858,36 @@
 
 
     Formbuilder.prototype.preprocessBootstrapDataForOptionsValidity = function(args) {
-      var bootstrapData, explicitMaxUsedId, f, fields, i, maxIdActuallyFound, maxIdToProceedWith, opt, someOptionsNeedIds, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref7, _ref8;
+      var bootstrapData, f, fields, i, opt, _i, _len, _results;
       bootstrapData = args.bootstrapData;
-      explicitMaxUsedId = 0;
-      if ((bootstrapData.maxUsedOptionId != null)) {
-        explicitMaxUsedId = bootstrapData.maxUsedOptionId;
-      }
       if (bootstrapData instanceof Array) {
         fields = bootstrapData;
       } else {
         fields = bootstrapData.fields;
       }
-      someOptionsNeedIds = false;
-      maxIdActuallyFound = 0;
+      _results = [];
       for (i = _i = 0, _len = fields.length; _i < _len; i = ++_i) {
         f = fields[i];
         if ((f.field_options != null) && (f.field_options.options != null)) {
-          _ref7 = f.field_options.options;
-          for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
-            opt = _ref7[_j];
-            if (opt.reasonOptionId == null) {
-              someOptionsNeedIds = true;
-            } else {
-              maxIdActuallyFound = Math.max(maxIdActuallyFound, opt.reasonOptionId);
-            }
-          }
-        }
-      }
-      maxIdToProceedWith = Math.max(maxIdActuallyFound, explicitMaxUsedId);
-      maxIdToProceedWith++;
-      if (someOptionsNeedIds) {
-        for (i = _k = 0, _len2 = fields.length; _k < _len2; i = ++_k) {
-          f = fields[i];
-          if ((f.field_options != null) && (f.field_options.options != null)) {
-            _ref8 = f.field_options.options;
-            for (_l = 0, _len3 = _ref8.length; _l < _len3; _l++) {
-              opt = _ref8[_l];
+          _results.push((function() {
+            var _j, _len1, _ref7, _results1;
+            _ref7 = f.field_options.options;
+            _results1 = [];
+            for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
+              opt = _ref7[_j];
               if (opt.reasonOptionId == null) {
-                opt.reasonOptionId = maxIdToProceedWith++;
+                _results1.push(opt.reasonOptionId = Formbuilder.getNextUniqueOptionId());
+              } else {
+                _results1.push(void 0);
               }
             }
-          }
+            return _results1;
+          })());
+        } else {
+          _results.push(void 0);
         }
       }
-      return Formbuilder.setHighestUniqueOptionId(maxIdToProceedWith);
+      return _results;
     };
 
     function Formbuilder(instanceOpts) {
@@ -1427,7 +1396,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\tfb.saveForm()\n\t}\n  </script>\n\n  <input type="button" onClick="debugMe();" value="DEBUG">\n</div>\n';
+'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\tvar fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\t}\n  </script>\n\n  <input type="button" onClick="debugMe();" value="DEBUG">\n</div>\n';
 
 }
 return __p
