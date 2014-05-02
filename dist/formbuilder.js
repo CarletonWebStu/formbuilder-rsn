@@ -470,19 +470,52 @@
       return this;
     };
 
+    BuilderView.prototype.stripPx = function(pxVal) {
+      var rv;
+      rv = pxVal.substring(0, pxVal.length - 2);
+      return 1 * rv;
+    };
+
     BuilderView.prototype.bindWindowScrollEvent = function() {
       var _this = this;
       return $(window).on('scroll', function() {
-        var maxMargin, newMargin;
-        if (_this.$fbLeft.data('locked') === true) {
-          return;
-        }
-        newMargin = Math.max(0, $(window).scrollTop());
-        maxMargin = _this.$responseFields.height();
-        return _this.$fbLeft.css({
-          'margin-top': Math.min(maxMargin, newMargin)
-        });
+        return _this.positionLeftHandUI();
       });
+    };
+
+    /*
+    vanilla formbuilder just scrolls the left hand ui based on the window scroll position, with a lower and a (rather inaccurate) upper
+    bound. This reworked version keeps the ui "pinned" to the top of the screen more or less.
+    figures out where the fb-left div should be so that it stays onscreen, follows user interactions, etc. snaps or animates.
+    */
+
+
+    BuilderView.prototype.positionLeftHandUI = function(doAnimate) {
+      var fbRight, fbRightHeight, fbTopRelativeToDocument, maxAllowableScroll, minAllowableScroll, proposedMargin, scrollerHeight, windowScrollPos;
+      if (doAnimate == null) {
+        doAnimate = false;
+      }
+      if (this.$fbLeft.data('locked') === true) {
+        return;
+      }
+      windowScrollPos = $(document).scrollTop();
+      scrollerHeight = this.stripPx(this.$fbLeft.css("height"));
+      fbRight = this.$el.find('.fb-right');
+      fbRightHeight = this.stripPx(fbRight.css("height"));
+      fbTopRelativeToDocument = fbRight.offset().top;
+      minAllowableScroll = 0;
+      maxAllowableScroll = fbRightHeight - scrollerHeight;
+      proposedMargin = Math.min(Math.abs(Math.min(minAllowableScroll, fbTopRelativeToDocument - windowScrollPos)), maxAllowableScroll);
+      if (doAnimate) {
+        this.$fbLeft.stop();
+        return this.$fbLeft.animate({
+          "margin-top": proposedMargin
+        }, 200);
+      } else {
+        return this.$fbLeft.css({
+          'margin-top': proposedMargin
+        });
+      }
     };
 
     BuilderView.prototype.showTab = function(e) {
@@ -586,10 +619,17 @@
     };
 
     BuilderView.prototype.createField = function(attrs, options) {
-      var rf;
+      var destination, rf, rfEl;
       rf = this.collection.create(attrs, options);
       this.createAndShowEditView(rf);
-      return this.handleFormUpdate();
+      this.handleFormUpdate();
+      if (!options || !options.position) {
+        rfEl = this.$el.find(".fb-field-wrapper").filter(function() {
+          return $(this).data('cid') === rf.cid;
+        });
+        destination = rfEl.offset().top - ($(window).height() / 4);
+        return $.scrollWindowTo(destination, 200);
+      }
     };
 
     BuilderView.prototype.createAndShowEditView = function(model) {
@@ -625,15 +665,43 @@
       return this.scrollLeftWrapper($(".fb-field-wrapper.editing"));
     };
 
+    /*
+    scrollLeftWrapper: ($responseFieldEl) ->
+      @unlockLeftWrapper()
+      return unless $responseFieldEl[0]
+      # console.log "scrolling to [" + ($responseFieldEl.offset().top - @$responseFields.offset().top) + "] (" + $responseFieldEl.offset().top + ")/(" + @$responseFields.offset().top + ")..."
+      $.scrollWindowTo ($responseFieldEl.offset().top - @$responseFields.offset().top), 200, =>
+        @lockLeftWrapper()
+    */
+
+
+    /*
+    # scroll version 2 - the element you're editing will scroll to about 1/4 of the way down the screen
+    scrollLeftWrapper: ($responseFieldEl) ->
+      @unlockLeftWrapper()
+      return unless $responseFieldEl[0]
+      # console.log "scrolling to [" + ($responseFieldEl.offset().top - @$responseFields.offset().top) + "] (" + $responseFieldEl.offset().top + ")/(" + @$responseFields.offset().top + ")..."
+    
+      destination = $responseFieldEl.offset().top - ($(window).height() / 4)
+    
+      # scroll window to some position over some number of milliseconds...
+      $.scrollWindowTo destination, 200, =>
+        @lockLeftWrapper()
+    */
+
+
     BuilderView.prototype.scrollLeftWrapper = function($responseFieldEl) {
-      var _this = this;
-      this.unlockLeftWrapper();
-      if (!$responseFieldEl[0]) {
-        return;
-      }
-      return $.scrollWindowTo($responseFieldEl.offset().top - this.$responseFields.offset().top, 200, function() {
-        return _this.lockLeftWrapper();
-      });
+      var destination, fbRight, fbRightHeight, maxAllowableScroll, scrollerHeight;
+      this.lockLeftWrapper();
+      fbRight = this.$el.find('.fb-right');
+      fbRightHeight = this.stripPx(fbRight.css("height"));
+      scrollerHeight = this.stripPx(this.$fbLeft.css("height"));
+      maxAllowableScroll = fbRightHeight - scrollerHeight;
+      destination = Math.min(maxAllowableScroll, $responseFieldEl.offset().top - this.$responseFields.offset().top);
+      this.$fbLeft.stop();
+      return this.$fbLeft.animate({
+        "margin-top": destination
+      }, 200);
     };
 
     BuilderView.prototype.lockLeftWrapper = function() {
@@ -641,7 +709,8 @@
     };
 
     BuilderView.prototype.unlockLeftWrapper = function() {
-      return this.$fbLeft.data('locked', false);
+      this.$fbLeft.data('locked', false);
+      return this.positionLeftHandUI(true);
     };
 
     BuilderView.prototype.handleFormUpdate = function() {
@@ -1396,7 +1465,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\tvar fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\t}\n  </script>\n\n  <input type="button" onClick="debugMe();" value="DEBUG">\n</div>\n';
+'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\tvar fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\n\t}\n  </script>\n\n  <input type="button" onClick="debugMe();" value="DEBUG">\n</div>\n';
 
 }
 return __p
