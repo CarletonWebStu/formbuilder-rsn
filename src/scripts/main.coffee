@@ -262,14 +262,70 @@ class BuilderView extends Backbone.View
 
     return @
 
+  stripPx: (pxVal) ->
+    rv = pxVal.substring(0, pxVal.length-2)
+    return 1 * rv
+
+  
   bindWindowScrollEvent: ->
     $(window).on 'scroll', =>
-      return if @$fbLeft.data('locked') == true
-      newMargin = Math.max(0, $(window).scrollTop())
-      maxMargin = @$responseFields.height()
+      @positionLeftHandUI()
 
+  # figures out where the fb-left div should be so that it stays onscreen, follows user interactions, etc. snaps or animates.
+  positionLeftHandUI: (doAnimate = false) ->
+    return if @$fbLeft.data('locked') == true
+
+    windowScrollPos = $(document).scrollTop()
+    windowHeight = $(window).height() # height of the viewable window
+    scrollerHeight = @stripPx(@$fbLeft.css("height"))
+    scrollerTopRelativeToDocument = @$fbLeft.offset().top
+    scrollerBottomRelativeToDocument = scrollerTopRelativeToDocument + scrollerHeight
+
+    # what are the absolute position of pixels that are currently visible onscreen?
+    windowTopRelativeToViewport = windowScrollPos
+    windowBottomRelativeToViewport = windowTopRelativeToViewport + windowHeight
+
+    scrollerTopRelativeToViewport = scrollerTopRelativeToDocument - windowTopRelativeToViewport
+    scrollerBottomRelativeToViewport = scrollerTopRelativeToViewport + scrollerHeight
+
+    scrollerCurrentMargin = @stripPx(@$fbLeft.css("margin-top"))
+
+    fbRight = @$el.find('.fb-right')
+    fbRightHeight = @stripPx(fbRight.css("height"))
+    fbTopRelativeToDocument = fbRight.offset().top
+
+    maxAllowableScroll = fbRightHeight - scrollerHeight
+    minAllowableScroll = 0
+
+    # add handling for scrolling to an edited item?
+
+    proposedMargin = Math.min(Math.abs(Math.min(0, fbTopRelativeToDocument - windowTopRelativeToViewport)), maxAllowableScroll)
+
+    ###
+    console.log "win [" + windowTopRelativeToViewport + "]<->[" + windowBottomRelativeToViewport + "], [" + windowHeight + "]hi / " +
+                "scrl [" + scrollerHeight + "]hi, currMargin [" + scrollerCurrentMargin + "], " +
+                "[" + scrollerTopRelativeToViewport + "]<->[" + scrollerBottomRelativeToViewport + "]vport, " +
+                "[" + scrollerTopRelativeToDocument + "]<->[" + scrollerBottomRelativeToDocument + "]doc...proposed [" + proposedMargin + "]"
+    ###
+
+    currentOffscreenAmount = scrollerBottomRelativeToDocument - windowBottomRelativeToViewport
+    potentialOffscreenAmount = (proposedMargin + scrollerBottomRelativeToViewport) - windowBottomRelativeToViewport
+    # console.log ("OFFSCREEN [" + currentOffscreenAmount + "]/[" + potentialOffscreenAmount + "]");
+
+    ### 
+    adjustmentFactor = 50
+    if (currentOffscreenAmount < adjustmentFactor * -2)
+      proposedMargin += 50
+    ###
+
+    if (doAnimate)
+      console.log "animation b: " + proposedMargin
+      @$fbLeft.animate({
+        "margin-top": proposedMargin
+      }, 200)
+    else
       @$fbLeft.css
-        'margin-top': Math.min(maxMargin, newMargin)
+        'margin-top': proposedMargin
 
   showTab: (e) ->
     $el = $(e.currentTarget)
@@ -278,6 +334,10 @@ class BuilderView extends Backbone.View
     $(target).addClass('active').siblings('.fb-tab-pane').removeClass('active')
 
     @unlockLeftWrapper() unless target == '#editField'
+
+    # if target == "#addField"
+      # console.log "ADDFIELD!!"
+      # @positionLeftHandUI(true) # repositions the lefthand UI after user clicks "Add new field" tabbutton
 
     if target == '#editField' && !@editView && (first_model = @collection.models[0])
       @createAndShowEditView(first_model)
@@ -369,6 +429,13 @@ class BuilderView extends Backbone.View
     @createAndShowEditView(rf)
     @handleFormUpdate()
 
+    if !options or !options.position
+      # user clicked one of the buttons in "add field" tab on left side
+      rfEl = @$el.find(".fb-field-wrapper").filter( -> $(@).data('cid') == rf.cid )
+      destination = rfEl.offset().top - ($(window).height() / 4)
+      $.scrollWindowTo destination, 200
+    # else, user selected the "duplicate" button. note that if user dragged a field onto right side, this method does not fire!
+
   createAndShowEditView: (model) ->
     $responseFieldEl = @$el.find(".fb-field-wrapper").filter( -> $(@).data('cid') == model.cid )
     #Set the editing classes, including fb-field-wrapper outside the list too (ad-hoc for last submit.)
@@ -397,17 +464,53 @@ class BuilderView extends Backbone.View
     return unless @editView
     @scrollLeftWrapper $(".fb-field-wrapper.editing")
 
+  # take 1 - scroll to get the item you're editing onscreen
+  ###
   scrollLeftWrapper: ($responseFieldEl) ->
     @unlockLeftWrapper()
     return unless $responseFieldEl[0]
+    # console.log "scrolling to [" + ($responseFieldEl.offset().top - @$responseFields.offset().top) + "] (" + $responseFieldEl.offset().top + ")/(" + @$responseFields.offset().top + ")..."
     $.scrollWindowTo ($responseFieldEl.offset().top - @$responseFields.offset().top), 200, =>
       @lockLeftWrapper()
+  ###
+
+  ###
+  # take 2 - the element you're editing will scroll to about 1/4 of the way down the screen
+  scrollLeftWrapper: ($responseFieldEl) ->
+    @unlockLeftWrapper()
+    return unless $responseFieldEl[0]
+    # console.log "scrolling to [" + ($responseFieldEl.offset().top - @$responseFields.offset().top) + "] (" + $responseFieldEl.offset().top + ")/(" + @$responseFields.offset().top + ")..."
+
+    destination = $responseFieldEl.offset().top - ($(window).height() / 4)
+
+    # scroll window to some position over some number of milliseconds...
+    $.scrollWindowTo destination, 200, =>
+      @lockLeftWrapper()
+  ###
+
+  # take 3 - don't scroll the window at all; instead move the fbLeft interface. less jarring for the user.
+  # TODO - when adding a new field, the left UI moves to nice place but we *should* scroll the window then...
+  # TODO - when clicking "Add new field" tab button, should animate the left UI back to the top instead of snapping
+  scrollLeftWrapper: ($responseFieldEl) ->
+    @lockLeftWrapper()
+
+    fbRight = @$el.find('.fb-right')
+    fbRightHeight = @stripPx(fbRight.css("height"))
+    scrollerHeight = @stripPx(@$fbLeft.css("height"))
+    maxAllowableScroll = fbRightHeight - scrollerHeight
+    destination = Math.min(maxAllowableScroll, $responseFieldEl.offset().top - @$responseFields.offset().top)
+
+    console.log "animation a: " + destination
+    @$fbLeft.animate({
+      "margin-top": destination
+    }, 200)
 
   lockLeftWrapper: ->
     @$fbLeft.data('locked', true)
 
   unlockLeftWrapper: ->
     @$fbLeft.data('locked', false)
+    @positionLeftHandUI(true)
 
   handleFormUpdate: ->
     return if @updatingBatch
