@@ -289,6 +289,9 @@ class BuilderView extends Backbone.View
     minAllowableScroll = 0
     maxAllowableScroll = fbRightHeight - scrollerHeight
 
+    # for brand new or other very small forms, maxAllowable might be zero!
+    maxAllowableScroll = Math.max(minAllowableScroll, maxAllowableScroll)
+
     # add handling for scrolling to an edited item?
 
     proposedMargin = Math.min(Math.abs(Math.min(minAllowableScroll, fbTopRelativeToDocument - windowScrollPos)), maxAllowableScroll)
@@ -300,6 +303,7 @@ class BuilderView extends Backbone.View
         "margin-top": proposedMargin
       }, 200)
     else
+      # console.log "snap b: " + proposedMargin
       @$fbLeft.css
         'margin-top': proposedMargin
 
@@ -469,6 +473,8 @@ class BuilderView extends Backbone.View
     scrollerHeight = @stripPx(@$fbLeft.css("height"))
     maxAllowableScroll = fbRightHeight - scrollerHeight
     destination = Math.min(maxAllowableScroll, $responseFieldEl.offset().top - @$responseFields.offset().top)
+
+    destination = Math.max(destination, 0)
 
     # console.log "animation a: " + destination
     @$fbLeft.stop()

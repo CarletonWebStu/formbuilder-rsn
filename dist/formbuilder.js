@@ -505,6 +505,7 @@
       fbTopRelativeToDocument = fbRight.offset().top;
       minAllowableScroll = 0;
       maxAllowableScroll = fbRightHeight - scrollerHeight;
+      maxAllowableScroll = Math.max(minAllowableScroll, maxAllowableScroll);
       proposedMargin = Math.min(Math.abs(Math.min(minAllowableScroll, fbTopRelativeToDocument - windowScrollPos)), maxAllowableScroll);
       if (doAnimate) {
         this.$fbLeft.stop();
@@ -698,6 +699,7 @@
       scrollerHeight = this.stripPx(this.$fbLeft.css("height"));
       maxAllowableScroll = fbRightHeight - scrollerHeight;
       destination = Math.min(maxAllowableScroll, $responseFieldEl.offset().top - this.$responseFields.offset().top);
+      destination = Math.max(destination, 0);
       this.$fbLeft.stop();
       return this.$fbLeft.animate({
         "margin-top": destination
