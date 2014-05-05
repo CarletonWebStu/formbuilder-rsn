@@ -1098,7 +1098,7 @@
 (function() {
   Formbuilder.registerField('paragraph', {
     order: 5,
-    view: "<textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'><%= rf.get(Formbuilder.options.mappings.DEFAULT_VALUE) %></textarea>",
+    view: "<textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>",
     edit: "<%= Formbuilder.templates['edit/defaultVal']() %>",
     /*was: """
       <%= Formbuilder.templates['edit/size']() %>
@@ -1169,7 +1169,7 @@
 (function() {
   Formbuilder.registerField('text', {
     order: 0,
-    view: "<input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>' value='<%= rf.get(Formbuilder.options.mappings.DEFAULT_VALUE) %>'/>",
+    view: "<input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'/>",
     edit: "<%= Formbuilder.templates['edit/defaultVal']() %>",
     /*was: """
       <%= Formbuilder.templates['edit/size']() %>
@@ -1480,7 +1480,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\tvar fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\n\t}\n  </script>\n\n  <input type="button" onClick="debugMe();" value="DEBUG">\n</div>\n';
+'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\t// var fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\n\t}\n  </script>\n\n  <input type="button" onClick="debugMe();" value="DEBUG">\n</div>\n';
 
 }
 return __p
