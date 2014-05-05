@@ -569,6 +569,7 @@ class Formbuilder
       SIZE: 'field_options.size'
       UNITS: 'field_options.units'
       LABEL: 'label'
+      DEFAULT_VALUE: 'default_value'
       FIELD_TYPE: 'field_type'
       REQUIRED: 'required'
       ADMIN_ONLY: 'admin_only'

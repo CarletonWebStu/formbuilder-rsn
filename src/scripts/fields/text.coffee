@@ -3,11 +3,12 @@ Formbuilder.registerField 'text',
   order: 0
 
   view: """
-    <input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>' />
+    <input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>' value='<%= rf.get(Formbuilder.options.mappings.DEFAULT_VALUE) %>'/>
   """
 
-  edit: ""
-
+  edit: """
+    <%= Formbuilder.templates['edit/defaultVal']() %>
+  """
   ###was: """
     <%= Formbuilder.templates['edit/size']() %>
     <%= Formbuilder.templates['edit/min_max_length']() %>

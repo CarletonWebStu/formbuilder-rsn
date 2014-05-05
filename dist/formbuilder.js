@@ -816,6 +816,7 @@
         SIZE: 'field_options.size',
         UNITS: 'field_options.units',
         LABEL: 'label',
+        DEFAULT_VALUE: 'default_value',
         FIELD_TYPE: 'field_type',
         REQUIRED: 'required',
         ADMIN_ONLY: 'admin_only',
@@ -1097,8 +1098,8 @@
 (function() {
   Formbuilder.registerField('paragraph', {
     order: 5,
-    view: "<textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>",
-    edit: "",
+    view: "<textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'><%= rf.get(Formbuilder.options.mappings.DEFAULT_VALUE) %></textarea>",
+    edit: "<%= Formbuilder.templates['edit/defaultVal']() %>",
     /*was: """
       <%= Formbuilder.templates['edit/size']() %>
       <%= Formbuilder.templates['edit/min_max_length']() %>
@@ -1168,8 +1169,8 @@
 (function() {
   Formbuilder.registerField('text', {
     order: 0,
-    view: "<input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>' />",
-    edit: "",
+    view: "<input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>' value='<%= rf.get(Formbuilder.options.mappings.DEFAULT_VALUE) %>'/>",
+    edit: "<%= Formbuilder.templates['edit/defaultVal']() %>",
     /*was: """
       <%= Formbuilder.templates['edit/size']() %>
       <%= Formbuilder.templates['edit/min_max_length']() %>
@@ -1286,6 +1287,18 @@ __p += '<div class=\'fb-edit-section-header\'>Label</div>\n\n<div class=\'fb-com
 '\n  </div>\n  <div class=\'fb-common-checkboxes\'>\n    ' +
 ((__t = ( Formbuilder.templates['edit/checkboxes']() )) == null ? '' : __t) +
 '\n  </div>\n  <div class=\'fb-clear\'></div>\n</div>\n';
+
+}
+return __p
+};
+
+this["Formbuilder"]["templates"]["edit/defaultVal"] = function(obj) {
+obj || (obj = {});
+var __t, __p = '', __e = _.escape;
+with (obj) {
+__p += '<div class=\'fb-edit-section-header\'>Default Value</div>\n  <div class=\'fb-default_value-description\'>\n\t\t<input type=\'text\' data-rv-input=\'model.' +
+((__t = ( Formbuilder.options.mappings.DEFAULT_VALUE )) == null ? '' : __t) +
+'\' />\n  </div>\n\n';
 
 }
 return __p

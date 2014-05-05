@@ -3,10 +3,12 @@ Formbuilder.registerField 'paragraph',
   order: 5
 
   view: """
-    <textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>
+    <textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'><%= rf.get(Formbuilder.options.mappings.DEFAULT_VALUE) %></textarea>
   """
 
-  edit: ""
+  edit: """
+    <%= Formbuilder.templates['edit/defaultVal']() %>
+  """
 
   ###was: """
     <%= Formbuilder.templates['edit/size']() %>
