@@ -971,9 +971,9 @@
       simple_format: function(x) {
         return x != null ? x.replace(/\n/g, '<br />') : void 0;
       },
-      warnIfEmpty: function(s) {
+      warnIfEmpty: function(s, warning) {
         if (emptyOrWhitespaceRegex.test(s)) {
-          return "<span class='fb-error'>" + Formbuilder.options.dict.EMPTY_LABEL_WARNING + "</span>";
+          return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>";
         }
         return s;
       }
@@ -1014,7 +1014,8 @@
       },
       dict: {
         ALL_CHANGES_SAVED: 'All changes saved',
-        EMPTY_LABEL_WARNING: 'Enter a label for this field',
+        EMPTY_LABEL_WARNING: 'Enter a label',
+        EMPTY_OPTION_WARNING: 'Enter a name',
         SAVE_FORM: 'Save form',
         UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!',
         NOTHING_TO_UNDO: 'Nothing to restore',
@@ -1193,7 +1194,7 @@
 (function() {
   Formbuilder.registerField('checkboxes', {
     order: 10,
-    view: "<%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='checkbox' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>\n    </label>\n  </div>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='checkbox' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
+    view: "<%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='checkbox' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </label>\n  </div>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='checkbox' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
     edit: "<%= Formbuilder.templates['edit/options']() %>",
     /*was: """
       <%= Formbuilder.templates['edit/options']({ includeOther: true }) %>
@@ -1222,7 +1223,7 @@
 (function() {
   Formbuilder.registerField('dropdown', {
     order: 24,
-    view: "<select>\n  <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>\n    <option value=''></option>\n  <% } %>\n\n  <%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n  %>\n    <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>\n      <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>\n    </option>\n  <% } %>\n</select>",
+    view: "<select>\n  <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>\n    <option value=''></option>\n  <% } %>\n\n  <%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n  %>\n    <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </option>\n  <% } %>\n</select>",
     edit: "<%= Formbuilder.templates['edit/options']() %>",
     /*was:  """
       <%= Formbuilder.templates['edit/options']({ includeBlank: true }) %>
@@ -1313,7 +1314,7 @@
 (function() {
   Formbuilder.registerField('radio', {
     order: 15,
-    view: "<%\n  var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n  for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='radio' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>\n    </label>\n  </div>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='radio' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
+    view: "<%\n  var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n  for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='radio' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </label>\n  </div>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='radio' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
     edit: "<%= Formbuilder.templates['edit/options']() %>",
     /* was: """
       <%= Formbuilder.templates['edit/options']({ includeOther: true }) %>
@@ -1571,7 +1572,9 @@ __p += '\n  <label>\n    <input type=\'checkbox\' data-rv-checked=\'model.' +
  } ;
 __p += '\n\n<div class=\'sortableParentContainer\'>\n\t<div class=\'option sortableElement\' data-rv-each-option=\'model.' +
 ((__t = ( Formbuilder.options.mappings.OPTIONS )) == null ? '' : __t) +
-'\'>\n\t  <input type="checkbox" class=\'js-default-updated\' data-rv-checked="option:checked" />\n\t  <input type="text" data-rv-input="option:label" class=\'option-label-input\' />\n\t  <a class="js-add-option ' +
+'\'>\n\t  <input type="checkbox" class=\'js-default-updated\' data-rv-checked="option:checked" />\n\t  <input placeholder=\'' +
+((__t = ( Formbuilder.options.dict.EMPTY_OPTION_WARNING )) == null ? '' : __t) +
+'\' type="text" data-rv-input="option:label" class=\'option-label-input\' />\n\t  <a class="js-add-option ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
 '" title="Add Option"><i class=\'fa fa-plus-circle\'></i></a>\n\t  <a class="js-remove-option ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
@@ -1789,7 +1792,7 @@ var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
 function print() { __p += __j.call(arguments, '') }
 with (obj) {
 __p += '<label>\n\t<span>' +
-((__t = ( Formbuilder.helpers.warnIfEmpty(Formbuilder.helpers.simple_format(rf.get(Formbuilder.options.mappings.LABEL))) )) == null ? '' : __t) +
+((__t = ( Formbuilder.helpers.warnIfEmpty(Formbuilder.helpers.simple_format(rf.get(Formbuilder.options.mappings.LABEL)), Formbuilder.options.dict.EMPTY_LABEL_WARNING) )) == null ? '' : __t) +
 '</span>\n  ';
  if (rf.get(Formbuilder.options.mappings.REQUIRED)) { ;
 __p += '\n    <abbr title=\'required\'>*</abbr>\n  ';

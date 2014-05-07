@@ -711,9 +711,9 @@ class Formbuilder
     simple_format: (x) ->
       x?.replace(/\n/g, '<br />')
 
-    warnIfEmpty: (s) ->
+    warnIfEmpty: (s, warning) ->
       if (emptyOrWhitespaceRegex.test(s))
-        return "<span class='fb-error'>" + Formbuilder.options.dict.EMPTY_LABEL_WARNING + "</span>"
+        return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>"
       s
 
   # take two - just use underscore utility to generate a unique id, prefixed with "c" also so that we
@@ -758,7 +758,8 @@ class Formbuilder
 
     dict:
       ALL_CHANGES_SAVED: 'All changes saved'
-      EMPTY_LABEL_WARNING: 'Enter a label for this field'
+      EMPTY_LABEL_WARNING: 'Enter a label'
+      EMPTY_OPTION_WARNING: 'Enter a name'
       SAVE_FORM: 'Save form'
       UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!'
       NOTHING_TO_UNDO: 'Nothing to restore'
