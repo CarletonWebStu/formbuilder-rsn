@@ -94,16 +94,26 @@ class EditFieldView extends Backbone.View
                                                 handle: ".js-drag-handle"})
       ), 10)
 
+    allowTypeChange = Formbuilder.options.ALLOW_TYPE_CHANGE
     setTimeout((=>
-      # now we need to do some setup on the "fieldTypeSelector" dropdown...first highlight the relevant option
-      $("#fieldTypeSelector").val(@model.attributes.field_type)
+      if (allowTypeChange)
+        $("#fieldDisplayEditable").css("display", "block")
 
-      # and now listen for changes
-      $("#fieldTypeSelector").change((=>
-        fromType = @model.attributes.field_type
-        toType = $("#fieldTypeSelector").val()
-        @changeEditingFieldTypeWithDataLossWarning(fromType, toType)
-      ))
+        # now we need to do some setup on the "fieldTypeSelector" dropdown...first highlight the relevant option
+        $("#fieldTypeSelector").val(@model.attributes.field_type)
+
+        # and now listen for changes
+        $("#fieldTypeSelector").change((=>
+          fromType = @model.attributes.field_type
+          toType = $("#fieldTypeSelector").val()
+          @changeEditingFieldTypeWithDataLossWarning(fromType, toType)
+        ))
+
+        $("#fieldDisplayNonEditable").remove()
+      else
+        $("#fieldDisplayNonEditable").css("display", "block")
+        $("#fieldDisplayEditable").remove()
+
     ), 10)
 
     return @
@@ -711,6 +721,7 @@ class Formbuilder
     WARN_IF_UNSAVED: true # this is on navigation away
     FORCE_BOTTOM_SUBMIT: true
     REQUIRED_DEFAULT: true
+    ALLOW_TYPE_CHANGE: false
 
     UNLISTED_FIELDS: [
      'submit_button'

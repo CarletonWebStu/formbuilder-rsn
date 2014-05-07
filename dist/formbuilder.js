@@ -254,7 +254,7 @@
     };
 
     EditFieldView.prototype.render = function() {
-      var _ref6,
+      var allowTypeChange, _ref6,
         _this = this;
       this.$el.html(Formbuilder.templates["edit/base" + (!this.model.is_input() ? '_non_input' : '')]({
         rf: this.model
@@ -276,14 +276,22 @@
           });
         }), 10);
       }
+      allowTypeChange = Formbuilder.options.ALLOW_TYPE_CHANGE;
       setTimeout((function() {
-        $("#fieldTypeSelector").val(_this.model.attributes.field_type);
-        return $("#fieldTypeSelector").change((function() {
-          var fromType, toType;
-          fromType = _this.model.attributes.field_type;
-          toType = $("#fieldTypeSelector").val();
-          return _this.changeEditingFieldTypeWithDataLossWarning(fromType, toType);
-        }));
+        if (allowTypeChange) {
+          $("#fieldDisplayEditable").css("display", "block");
+          $("#fieldTypeSelector").val(_this.model.attributes.field_type);
+          $("#fieldTypeSelector").change((function() {
+            var fromType, toType;
+            fromType = _this.model.attributes.field_type;
+            toType = $("#fieldTypeSelector").val();
+            return _this.changeEditingFieldTypeWithDataLossWarning(fromType, toType);
+          }));
+          return $("#fieldDisplayNonEditable").remove();
+        } else {
+          $("#fieldDisplayNonEditable").css("display", "block");
+          return $("#fieldDisplayEditable").remove();
+        }
       }), 10);
       return this;
     };
@@ -972,6 +980,7 @@
       WARN_IF_UNSAVED: true,
       FORCE_BOTTOM_SUBMIT: true,
       REQUIRED_DEFAULT: true,
+      ALLOW_TYPE_CHANGE: false,
       UNLISTED_FIELDS: ['submit_button'],
       mappings: {
         SIZE: 'field_options.size',
@@ -1409,15 +1418,19 @@ obj || (obj = {});
 var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
 function print() { __p += __j.call(arguments, '') }
 with (obj) {
-__p += '<div>\n\tField Type: \n\t<select id="fieldTypeSelector">\n\t\t';
+__p += '<div>\n\t<div id="fieldDisplayEditable" style="display:none">\n\t\tField Type: \n\t\t<select id="fieldTypeSelector">\n\t\t\t';
  _(Formbuilder.getSupportedFields()).each(function(fieldProps, fieldName) { ;
-__p += '\n\t\t<option value="' +
+__p += '\n\t\t\t<option value="' +
 ((__t = (fieldName)) == null ? '' : __t) +
 '">' +
 ((__t = ( fieldName )) == null ? '' : __t) +
-'</option>\n\t\t';
+'</option>\n\t\t\t';
  }); ;
-__p += '\n\t</select>\n</div>\n';
+__p += '\n\t\t</select>\n\t</div>\n\t<div id="fieldDisplayNonEditable" class=\'fb-field-label\' style="display:none">\n\t\t<span data-rv-text="model.' +
+((__t = ( Formbuilder.options.mappings.LABEL )) == null ? '' : __t) +
+'"></span>\n\t\t<code class=\'field-type\' data-rv-text=\'model.' +
+((__t = ( Formbuilder.options.mappings.FIELD_TYPE )) == null ? '' : __t) +
+'\'></code>\n\t\t<span class=\'fa fa-arrow-right pull-right\'></span>\n\t</div>\n</div>\n';
 
 }
 return __p

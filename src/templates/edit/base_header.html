@@ -1,8 +1,15 @@
 <div>
-	Field Type: 
-	<select id="fieldTypeSelector">
-		<% _(Formbuilder.getSupportedFields()).each(function(fieldProps, fieldName) { %>
-		<option value="<%=fieldName%>"><%= fieldName %></option>
-		<% }); %>
-	</select>
+	<div id="fieldDisplayEditable" style="display:none">
+		Field Type: 
+		<select id="fieldTypeSelector">
+			<% _(Formbuilder.getSupportedFields()).each(function(fieldProps, fieldName) { %>
+			<option value="<%=fieldName%>"><%= fieldName %></option>
+			<% }); %>
+		</select>
+	</div>
+	<div id="fieldDisplayNonEditable" class='fb-field-label' style="display:none">
+		<span data-rv-text="model.<%= Formbuilder.options.mappings.LABEL %>"></span>
+		<code class='field-type' data-rv-text='model.<%= Formbuilder.options.mappings.FIELD_TYPE %>'></code>
+		<span class='fa fa-arrow-right pull-right'></span>
+	</div>
 </div>
