@@ -277,6 +277,9 @@
         }), 10);
       }
       allowTypeChange = Formbuilder.options.ALLOW_TYPE_CHANGE;
+      if (this.model.attributes.field_type === "submit_button") {
+        allowTypeChange = false;
+      }
       setTimeout((function() {
         if (allowTypeChange) {
           $("#fieldDisplayEditable").css("display", "block");
@@ -1426,11 +1429,13 @@ __p += '\n\t\t\t<option value="' +
 ((__t = ( fieldName )) == null ? '' : __t) +
 '</option>\n\t\t\t';
  }); ;
-__p += '\n\t\t</select>\n\t</div>\n\t<div id="fieldDisplayNonEditable" class=\'fb-field-label\' style="display:none">\n\t\t<span data-rv-text="model.' +
+__p += '\n\t\t</select>\n\t</div>\n\t<!--\n\t<div id="fieldDisplayNonEditable" class=\'fb-field-label\' style="display:none">\n\t\t<span data-rv-text="model.' +
 ((__t = ( Formbuilder.options.mappings.LABEL )) == null ? '' : __t) +
 '"></span>\n\t\t<code class=\'field-type\' data-rv-text=\'model.' +
 ((__t = ( Formbuilder.options.mappings.FIELD_TYPE )) == null ? '' : __t) +
-'\'></code>\n\t\t<span class=\'fa fa-arrow-right pull-right\'></span>\n\t</div>\n</div>\n';
+'\'></code>\n\t\t<span class=\'fa fa-arrow-right pull-right\'></span>\n\t</div>\n\t-->\n\t<div id="fieldDisplayNonEditable" style="display:none">\n\t\tField Type: <span data-rv-text="model.' +
+((__t = ( Formbuilder.options.mappings.FIELD_TYPE )) == null ? '' : __t) +
+'"></span>\n\t</div>\n</div>\n';
 
 }
 return __p
@@ -1666,7 +1671,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n</div>';
+'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n\n    }\n    </script>\n\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n  </div>\n';
 
 }
 return __p

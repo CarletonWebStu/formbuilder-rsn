@@ -95,8 +95,11 @@ class EditFieldView extends Backbone.View
       ), 10)
 
     allowTypeChange = Formbuilder.options.ALLOW_TYPE_CHANGE
+    if (@model.attributes.field_type == "submit_button")
+      allowTypeChange = false
     setTimeout((=>
       if (allowTypeChange)
+
         $("#fieldDisplayEditable").css("display", "block")
 
         # now we need to do some setup on the "fieldTypeSelector" dropdown...first highlight the relevant option
