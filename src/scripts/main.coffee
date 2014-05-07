@@ -1,3 +1,5 @@
+emptyOrWhitespaceRegex = RegExp(/^\s*$/)
+
 class FormbuilderModel extends Backbone.DeepModel
   sync: -> # noop
   indexInDOM: ->
@@ -700,7 +702,7 @@ class Formbuilder
   @helpers:
     defaultFieldAttrs: (field_type) ->
       attrs = {}
-      _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Untitled')
+      _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, '')
       _.pathAssign(attrs, Formbuilder.options.mappings.FIELD_TYPE, field_type)
       _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, Formbuilder.options.REQUIRED_DEFAULT)
 
@@ -708,6 +710,11 @@ class Formbuilder
 
     simple_format: (x) ->
       x?.replace(/\n/g, '<br />')
+
+    warnIfEmpty: (s) ->
+      if (emptyOrWhitespaceRegex.test(s))
+        return "<span class='fb-error'>" + Formbuilder.options.dict.EMPTY_LABEL_WARNING + "</span>"
+      s
 
   # take two - just use underscore utility to generate a unique id, prefixed with "c" also so that we
   # don't collide with the id's generated for the other form elements. (in the db these will all be getting
@@ -751,6 +758,7 @@ class Formbuilder
 
     dict:
       ALL_CHANGES_SAVED: 'All changes saved'
+      EMPTY_LABEL_WARNING: 'Enter a label for this field'
       SAVE_FORM: 'Save form'
       UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!'
       NOTHING_TO_UNDO: 'Nothing to restore'
