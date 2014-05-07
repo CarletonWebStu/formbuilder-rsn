@@ -93,7 +93,127 @@ class EditFieldView extends Backbone.View
                                                 stop: ((evt, ui) => @completedOptionDrag(evt, ui)),
                                                 handle: ".js-drag-handle"})
       ), 10)
+
+    setTimeout((=>
+      # now we need to do some setup on the "fieldTypeSelector" dropdown...first highlight the relevant option
+      $("#fieldTypeSelector").val(@model.attributes.field_type)
+
+      # and now listen for changes
+      $("#fieldTypeSelector").change((=>
+        fromType = @model.attributes.field_type
+        toType = $("#fieldTypeSelector").val()
+        @changeEditingFieldTypeWithDataLossWarning(fromType, toType)
+      ))
+    ), 10)
+
     return @
+
+  # converting from one field to another may cause some loss of data. This checks to see
+  # if we're in such a situation, and warns the user if so.
+  changeEditingFieldTypeWithDataLossWarning: (fromType, toType) ->
+    ###
+    if (fromType == toType)
+      return
+
+    multiFields = ["radio","checkboxes","dropdown"]
+
+    warning = ""
+
+    if (fromType in ["text", "paragraph"])
+      if (fromType not in ["text", "paragraph"])
+        warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose 'default value' data."
+    else if (fromType in ["hidden_field", "text_comment"])
+      # every translation is allowed with no lost data
+    else if (fromType in multiFields)
+      if (toType in multiFields)
+        if (fromType == "checkboxes")
+          warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose some data."
+      else
+          warning = "when changing a field from '" + fromType + "' to '" + toType + "' you will lose any entered 'options' data."
+
+    if (warning == "")
+      @changeEditingFieldType(fromType, toType)
+    else
+      if (confirm('Warning - ' + warning))
+        @changeEditingFieldType(fromType, toType)
+    ###
+    if (true || confirm('Warning - changing field types may lose some form structure. Do you want to continue?'))
+      @changeEditingFieldType(fromType, toType)
+
+  changeEditingFieldType: (fromType, toType) ->
+    ###
+    other possibility - in fields/[input_type].coffee, fields that require custom behavior can define functions like:
+          getDataForTranslation: ((model) ->
+            return { label: model.get(Formbuilder.options.mappings.DESCRIPTION) }
+            )
+
+          setDataForTranslation: ((model, translationData) ->
+            model.set(Formbuilder.options.mappings.LABEL, "Text Comment")
+            model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.label)
+            )
+    
+    and then this function could hook into it thusly:
+          if (Formbuilder.fields[fromType].getDataForTranslation)
+            # some fields store their data in non-standard ways. Grab it from them if possible
+            translationData = Formbuilder.fields[fromType].getDataForTranslation(@model)
+
+    problem is since those individual coffee files for the field types aren't really classes, we lose a lot of 
+    the benefits of this approach - can't do real base class functionality, so this logic would end up mixed between
+    those individual coffee files and this function for default behavior.
+
+    At some point might be nice to rethink how those fields register themselves, but for now we can
+    contain the logic to this one function at least, so it's manageable.
+    ###
+
+    translationData = { pseudoLabel: null, options: null, defaultValue: null }
+    if (fromType in ["text_comment"])
+      translationData.pseudoLabel = @model.get(Formbuilder.options.mappings.DESCRIPTION)
+    else
+      translationData.pseudoLabel = @model.get(Formbuilder.options.mappings.LABEL)
+
+    if (fromType in ["text", "paragraph"] and toType in ["text", "paragraph"])
+      translationData.defaultValue = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
+
+    if (toType in ["radio", "checkboxes", "dropdown"])
+      if (fromType in ["radio", "checkboxes", "dropdown"])
+        # checkboxes allow multiple prechecks; radio/dropdown do not. If we're moving from checkboxes, need to make sure no more than one thing is checked...
+        onlyAllowOneCheck = fromType == "checkboxes"
+        if (onlyAllowOneCheck)
+          checksSeen = 0
+          for o, idx in @model.get(Formbuilder.options.mappings.OPTIONS)
+            if (o.checked)
+              if (checksSeen > 0)
+                o.checked = false
+              checksSeen++
+
+        translationData.options = _.clone(@model.get(Formbuilder.options.mappings.OPTIONS))
+
+    console.log "label set to [" + translationData.pseudoLabel + "]"
+
+    # we've extracted the relevant data; now let's update the model
+    # delete stuff that may not exist on the destination type; it'll get re-created if necessary
+    delete @model.attributes.field_options
+    delete @model.attributes.default_value
+
+    # everything has a field type
+    @model.set(Formbuilder.options.mappings.FIELD_TYPE, toType)
+
+    # most things store label in label, but text comment is a little screwy
+    if (toType in ["text_comment"])
+      @model.set(Formbuilder.options.mappings.LABEL, Formbuilder.fields[toType].defaultAttributes({})[Formbuilder.options.mappings.LABEL])
+      @model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.pseudoLabel)
+    else
+      @model.set(Formbuilder.options.mappings.LABEL, translationData.pseudoLabel)
+
+    if (translationData.defaultValue != null)
+      @model.set(Formbuilder.options.mappings.DEFAULT_VALUE, translationData.defaultValue)
+
+    if (translationData.options != null)
+      @model.set(Formbuilder.options.mappings.OPTIONS, translationData.options)
+
+    @forceRender() # re-renders the right-hand-side of page
+    @parentView.createAndShowEditView(@model, true) # updates the edit view
+        
   
   debugOptions: (opts) ->
     rv = ""
@@ -412,13 +532,14 @@ class BuilderView extends Backbone.View
       $.scrollWindowTo destination, 200
     # else, user selected the "duplicate" button. note that if user dragged a field onto right side, this method does not fire!
 
-  createAndShowEditView: (model) ->
+  # allowRepeatCreation allows us to re-create an edit view that is already active. This is used when we change the field_type of a form element during editing.
+  createAndShowEditView: (model, allowRepeatCreation = false) ->
     $responseFieldEl = @$el.find(".fb-field-wrapper").filter( -> $(@).data('cid') == model.cid )
     #Set the editing classes, including fb-field-wrapper outside the list too (ad-hoc for last submit.)
     $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing')
 
     if @editView
-      if @editView.model.cid is model.cid
+      if @editView.model.cid is model.cid and not allowRepeatCreation
         @$el.find(".fb-tabs a[data-target=\"#editField\"]").click()
         @scrollLeftWrapper $responseFieldEl, (oldPadding? && oldPadding)
         return
@@ -596,6 +717,14 @@ class Formbuilder
   @inputFields: {}
   @nonInputFields: {}
   debug: {}
+
+  @getSupportedFields: () ->
+    rv = {}
+    $.extend(true, rv, @inputFields, @nonInputFields)
+    # rv = @inputFields
+    # console.log "look:"
+    # console.log rv
+    return rv
 
   @registerField: (name, opts) ->
     for x in ['view', 'edit']

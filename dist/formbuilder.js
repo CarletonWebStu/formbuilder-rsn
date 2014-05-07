@@ -276,7 +276,136 @@
           });
         }), 10);
       }
+      setTimeout((function() {
+        $("#fieldTypeSelector").val(_this.model.attributes.field_type);
+        return $("#fieldTypeSelector").change((function() {
+          var fromType, toType;
+          fromType = _this.model.attributes.field_type;
+          toType = $("#fieldTypeSelector").val();
+          return _this.changeEditingFieldTypeWithDataLossWarning(fromType, toType);
+        }));
+      }), 10);
       return this;
+    };
+
+    EditFieldView.prototype.changeEditingFieldTypeWithDataLossWarning = function(fromType, toType) {
+      /*
+      if (fromType == toType)
+        return
+      
+      multiFields = ["radio","checkboxes","dropdown"]
+      
+      warning = ""
+      
+      if (fromType in ["text", "paragraph"])
+        if (fromType not in ["text", "paragraph"])
+          warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose 'default value' data."
+      else if (fromType in ["hidden_field", "text_comment"])
+        # every translation is allowed with no lost data
+      else if (fromType in multiFields)
+        if (toType in multiFields)
+          if (fromType == "checkboxes")
+            warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose some data."
+        else
+            warning = "when changing a field from '" + fromType + "' to '" + toType + "' you will lose any entered 'options' data."
+      
+      if (warning == "")
+        @changeEditingFieldType(fromType, toType)
+      else
+        if (confirm('Warning - ' + warning))
+          @changeEditingFieldType(fromType, toType)
+      */
+
+      if (true || confirm('Warning - changing field types may lose some form structure. Do you want to continue?')) {
+        return this.changeEditingFieldType(fromType, toType);
+      }
+    };
+
+    EditFieldView.prototype.changeEditingFieldType = function(fromType, toType) {
+      /*
+      if (Formbuilder.fields[fromType].getDataForTranslation)
+        # some fields store their data in non-standard ways. Grab it from them if possible
+        translationData = Formbuilder.fields[fromType].getDataForTranslation(@model)
+      else
+        # otherwise, stub it out
+        translationData = { label: null, options: null, defaultValue: null }
+      
+      # now let's use default values for any fields that haven't defined custom behavior in their
+      # getDataForTranslation function (or haven't exposed such a function at all)
+      if (translationData.label == null)
+        translationData.label = @model.get(Formbuilder.options.mappings.LABEL)
+      
+      if (translationData.defaultValue == null)
+        translationData.defaultValue = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
+      
+      if (translationData.options == null)
+        translationData.options = _.clone(@model.get(Formbuilder.options.mappings.OPTIONS))
+      */
+
+      var checksSeen, idx, o, onlyAllowOneCheck, translationData, _i, _len, _ref6;
+      translationData = {
+        pseudoLabel: null,
+        options: null,
+        defaultValue: null
+      };
+      if ((fromType === "text_comment")) {
+        translationData.pseudoLabel = this.model.get(Formbuilder.options.mappings.DESCRIPTION);
+      } else {
+        translationData.pseudoLabel = this.model.get(Formbuilder.options.mappings.LABEL);
+      }
+      if ((fromType === "text" || fromType === "paragraph") && (toType === "text" || toType === "paragraph")) {
+        translationData.defaultValue = this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE);
+      }
+      if ((toType === "radio" || toType === "checkboxes" || toType === "dropdown")) {
+        if ((fromType === "radio" || fromType === "checkboxes" || fromType === "dropdown")) {
+          onlyAllowOneCheck = fromType === "checkboxes";
+          if (onlyAllowOneCheck) {
+            checksSeen = 0;
+            _ref6 = this.model.get(Formbuilder.options.mappings.OPTIONS);
+            for (idx = _i = 0, _len = _ref6.length; _i < _len; idx = ++_i) {
+              o = _ref6[idx];
+              if (o.checked) {
+                if (checksSeen > 0) {
+                  o.checked = false;
+                }
+                checksSeen++;
+              }
+            }
+          }
+          translationData.options = _.clone(this.model.get(Formbuilder.options.mappings.OPTIONS));
+        }
+      }
+      console.log("label set to [" + translationData.pseudoLabel + "]");
+      delete this.model.attributes.field_options;
+      delete this.model.attributes.default_value;
+      this.model.set(Formbuilder.options.mappings.FIELD_TYPE, toType);
+      if ((toType === "text_comment")) {
+        this.model.set(Formbuilder.options.mappings.LABEL, Formbuilder.fields[toType].defaultAttributes({})[Formbuilder.options.mappings.LABEL]);
+        this.model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.pseudoLabel);
+      } else {
+        this.model.set(Formbuilder.options.mappings.LABEL, translationData.pseudoLabel);
+      }
+      if (translationData.defaultValue !== null) {
+        this.model.set(Formbuilder.options.mappings.DEFAULT_VALUE, translationData.defaultValue);
+      }
+      if (translationData.options !== null) {
+        this.model.set(Formbuilder.options.mappings.OPTIONS, translationData.options);
+      }
+      /*
+      if (Formbuilder.fields[toType].setDataForTranslation)
+        Formbuilder.fields[toType].setDataForTranslation(@model, translationData)
+      else
+        @model.set(Formbuilder.options.mappings.LABEL, translationData.label)
+      
+        if (translationData.options != null)
+          @model.set(Formbuilder.options.mappings.OPTIONS, translationData.options)
+      
+        if (translationData.defaultValue != null)
+          @model.set(Formbuilder.options.mappings.DEFAULT_VALUE, translationData.defaultValue)
+      */
+
+      this.forceRender();
+      return this.parentView.createAndShowEditView(this.model, true);
     };
 
     EditFieldView.prototype.debugOptions = function(opts) {
@@ -633,14 +762,17 @@
       }
     };
 
-    BuilderView.prototype.createAndShowEditView = function(model) {
+    BuilderView.prototype.createAndShowEditView = function(model, allowRepeatCreation) {
       var $newEditEl, $responseFieldEl, oldPadding;
+      if (allowRepeatCreation == null) {
+        allowRepeatCreation = false;
+      }
       $responseFieldEl = this.$el.find(".fb-field-wrapper").filter(function() {
         return $(this).data('cid') === model.cid;
       });
       $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing');
       if (this.editView) {
-        if (this.editView.model.cid === model.cid) {
+        if (this.editView.model.cid === model.cid && !allowRepeatCreation) {
           this.$el.find(".fb-tabs a[data-target=\"#editField\"]").click();
           this.scrollLeftWrapper($responseFieldEl, (typeof oldPadding !== "undefined" && oldPadding !== null) && oldPadding);
           return;
@@ -849,6 +981,13 @@
     Formbuilder.nonInputFields = {};
 
     Formbuilder.prototype.debug = {};
+
+    Formbuilder.getSupportedFields = function() {
+      var rv;
+      rv = {};
+      $.extend(true, rv, this.inputFields, this.nonInputFields);
+      return rv;
+    };
 
     Formbuilder.registerField = function(name, opts) {
       var x, _i, _len, _ref7;
@@ -1192,7 +1331,16 @@
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Text Comment');
       return attrs;
-    }
+    },
+    getDataForTranslation: (function(model) {
+      return {
+        label: model.get(Formbuilder.options.mappings.DESCRIPTION)
+      };
+    }),
+    setDataForTranslation: (function(model, translationData) {
+      model.set(Formbuilder.options.mappings.LABEL, "Text Comment");
+      return model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.label);
+    })
   });
 
 }).call(this);
@@ -1238,13 +1386,18 @@ return __p
 
 this["Formbuilder"]["templates"]["edit/base_header"] = function(obj) {
 obj || (obj = {});
-var __t, __p = '', __e = _.escape;
+var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
+function print() { __p += __j.call(arguments, '') }
 with (obj) {
-__p += '<div class=\'fb-field-label\'>\n  <span data-rv-text="model.' +
-((__t = ( Formbuilder.options.mappings.LABEL )) == null ? '' : __t) +
-'"></span>\n  <code class=\'field-type\' data-rv-text=\'model.' +
-((__t = ( Formbuilder.options.mappings.FIELD_TYPE )) == null ? '' : __t) +
-'\'></code>\n  <span class=\'fa fa-arrow-right pull-right\'></span>\n</div>';
+__p += '<div>\n\tField Type: \n\t<select id="fieldTypeSelector">\n\t\t';
+ _(Formbuilder.getSupportedFields()).each(function(fieldProps, fieldName) { ;
+__p += '\n\t\t<option value="' +
+((__t = (fieldName)) == null ? '' : __t) +
+'">' +
+((__t = ( fieldName )) == null ? '' : __t) +
+'</option>\n\t\t';
+ }); ;
+__p += '\n\t</select>\n</div>\n';
 
 }
 return __p
@@ -1480,7 +1633,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\t// var fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\n\t}\n  </script>\n\n  <input type="button" onClick="debugMe();" value="DEBUG">\n</div>\n';
+'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\t// var fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\n\t}\n  </script>\n\n\t<p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n</div>\n';
 
 }
 return __p
