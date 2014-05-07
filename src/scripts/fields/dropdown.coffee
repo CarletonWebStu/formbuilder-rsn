@@ -17,6 +17,10 @@ Formbuilder.registerField 'dropdown',
         </option>
       <% } %>
     </select>
+
+    <% if (optionsForLooping.length == 0) { %>
+        <%= Formbuilder.helpers.warnIfEmpty("", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>
+    <% } %>
   """
 
   edit: """

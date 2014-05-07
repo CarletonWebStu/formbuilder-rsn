@@ -15,6 +15,10 @@ Formbuilder.registerField 'radio',
       </div>
     <% } %>
 
+    <% if (optionsForLooping.length == 0) { %>
+        <%= Formbuilder.helpers.warnIfEmpty("", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>
+    <% } %>
+
     <% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>
       <div class='other-option'>
         <label class='fb-option'>
