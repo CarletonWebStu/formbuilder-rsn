@@ -108,10 +108,17 @@ class EditFieldView extends Backbone.View
 
     return @
 
+  dataWasEntered: (data) ->
+    console.log "checking data [" + data + "]..."
+    if (data != null and data != undefined and data != "")
+      return true
+    else
+      return false
+    
+
   # converting from one field to another may cause some loss of data. This checks to see
   # if we're in such a situation, and warns the user if so.
   changeEditingFieldTypeWithDataLossWarning: (fromType, toType) ->
-    ###
     if (fromType == toType)
       return
 
@@ -120,25 +127,47 @@ class EditFieldView extends Backbone.View
     warning = ""
 
     if (fromType in ["text", "paragraph"])
-      if (fromType not in ["text", "paragraph"])
-        warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose 'default value' data."
-    else if (fromType in ["hidden_field", "text_comment"])
-      # every translation is allowed with no lost data
+      # text/paragraph types have a "default value" - if this is present, and we're switching to certain types, need to warn...
+      if (toType not in ["text", "paragraph"])
+        inputData = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
+        if (@dataWasEntered(inputData))
+          warning = "you will lose the default value text \"" + inputData + "\""
+    else if (fromType == "text_comment")
+      # every translation is ok
+    else if (fromType == "hidden_field")
+      inputData = @model.get(Formbuilder.options.mappings.DESCRIPTION)
+      if (@dataWasEntered(inputData))
+        warning = "you will lose the data text \"" + inputData + "\""
     else if (fromType in multiFields)
+      # are there any options, and how many are checked?
+      numOptions = 0
+      numCheckedOptions = 0
+      if (@model.get(Formbuilder.options.mappings.OPTIONS))
+        for o in @model.get(Formbuilder.options.mappings.OPTIONS)
+          numOptions++
+          if (o.checked)
+            numCheckedOptions++
+
       if (toType in multiFields)
-        if (fromType == "checkboxes")
-          warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose some data."
+        if (fromType == "checkboxes" and numCheckedOptions > 1)
+          warning = "only one option can be checked by default"
       else
-          warning = "when changing a field from '" + fromType + "' to '" + toType + "' you will lose any entered 'options' data."
+        if (numOptions > 0)
+          warning = "you will lose all your entered options"
+    else
+      console.log "change_type from [" + fromType + "] to [" + toType + "] is not supported"
+      $("#fieldTypeSelector").val(fromType)
+      return
 
     if (warning == "")
       @changeEditingFieldType(fromType, toType)
     else
-      if (confirm('Warning - ' + warning))
+      warning = "Warning - by changing this field from \"" + fromType + "\" to \"" + toType + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!"
+
+      if (confirm(warning))
         @changeEditingFieldType(fromType, toType)
-    ###
-    if (true || confirm('Warning - changing field types may lose some form structure. Do you want to continue?'))
-      @changeEditingFieldType(fromType, toType)
+      else
+        $("#fieldTypeSelector").val(fromType)
 
   changeEditingFieldType: (fromType, toType) ->
     ###
@@ -180,11 +209,12 @@ class EditFieldView extends Backbone.View
         onlyAllowOneCheck = fromType == "checkboxes"
         if (onlyAllowOneCheck)
           checksSeen = 0
-          for o, idx in @model.get(Formbuilder.options.mappings.OPTIONS)
-            if (o.checked)
-              if (checksSeen > 0)
-                o.checked = false
-              checksSeen++
+          if (@model.get(Formbuilder.options.mappings.OPTIONS))
+            for o, idx in @model.get(Formbuilder.options.mappings.OPTIONS)
+              if (o.checked)
+                if (checksSeen > 0)
+                  o.checked = false
+                checksSeen++
 
         translationData.options = _.clone(@model.get(Formbuilder.options.mappings.OPTIONS))
 

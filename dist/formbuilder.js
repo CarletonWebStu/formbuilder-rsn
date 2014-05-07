@@ -91,8 +91,8 @@
   var BuilderView, DeletedFieldCollection, DeletedFieldModel, EditFieldView, Formbuilder, FormbuilderCollection, FormbuilderModel, ViewFieldView, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   FormbuilderModel = (function(_super) {
     __extends(FormbuilderModel, _super);
@@ -288,58 +288,98 @@
       return this;
     };
 
-    EditFieldView.prototype.changeEditingFieldTypeWithDataLossWarning = function(fromType, toType) {
-      /*
-      if (fromType == toType)
-        return
-      
-      multiFields = ["radio","checkboxes","dropdown"]
-      
-      warning = ""
-      
-      if (fromType in ["text", "paragraph"])
-        if (fromType not in ["text", "paragraph"])
-          warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose 'default value' data."
-      else if (fromType in ["hidden_field", "text_comment"])
-        # every translation is allowed with no lost data
-      else if (fromType in multiFields)
-        if (toType in multiFields)
-          if (fromType == "checkboxes")
-            warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose some data."
-        else
-            warning = "when changing a field from '" + fromType + "' to '" + toType + "' you will lose any entered 'options' data."
-      
-      if (warning == "")
-        @changeEditingFieldType(fromType, toType)
-      else
-        if (confirm('Warning - ' + warning))
-          @changeEditingFieldType(fromType, toType)
-      */
+    EditFieldView.prototype.dataWasEntered = function(data) {
+      console.log("checking data [" + data + "]...");
+      if (data !== null && data !== void 0 && data !== "") {
+        return true;
+      } else {
+        return false;
+      }
+    };
 
-      if (true || confirm('Warning - changing field types may lose some form structure. Do you want to continue?')) {
+    EditFieldView.prototype.changeEditingFieldTypeWithDataLossWarning = function(fromType, toType) {
+      var inputData, multiFields, numCheckedOptions, numOptions, o, warning, _i, _len, _ref6;
+      if (fromType === toType) {
+        return;
+      }
+      multiFields = ["radio", "checkboxes", "dropdown"];
+      warning = "";
+      if ((fromType === "text" || fromType === "paragraph")) {
+        if ((toType !== "text" && toType !== "paragraph")) {
+          inputData = this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE);
+          if (this.dataWasEntered(inputData)) {
+            warning = "you will lose the default value text \"" + inputData + "\"";
+          }
+        }
+      } else if (fromType === "text_comment") {
+
+      } else if (fromType === "hidden_field") {
+        inputData = this.model.get(Formbuilder.options.mappings.DESCRIPTION);
+        if (this.dataWasEntered(inputData)) {
+          warning = "you will lose the data text \"" + inputData + "\"";
+        }
+      } else if ((__indexOf.call(multiFields, fromType) >= 0)) {
+        numOptions = 0;
+        numCheckedOptions = 0;
+        if (this.model.get(Formbuilder.options.mappings.OPTIONS)) {
+          _ref6 = this.model.get(Formbuilder.options.mappings.OPTIONS);
+          for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
+            o = _ref6[_i];
+            numOptions++;
+            if (o.checked) {
+              numCheckedOptions++;
+            }
+          }
+        }
+        if ((__indexOf.call(multiFields, toType) >= 0)) {
+          if (fromType === "checkboxes" && numCheckedOptions > 1) {
+            warning = "only one option can be checked by default";
+          }
+        } else {
+          if (numOptions > 0) {
+            warning = "you will lose all your entered options";
+          }
+        }
+      } else {
+        console.log("change_type from [" + fromType + "] to [" + toType + "] is not supported");
+        $("#fieldTypeSelector").val(fromType);
+        return;
+      }
+      if (warning === "") {
         return this.changeEditingFieldType(fromType, toType);
+      } else {
+        warning = "Warning - by changing this field from \"" + fromType + "\" to \"" + toType + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!";
+        if (confirm(warning)) {
+          return this.changeEditingFieldType(fromType, toType);
+        } else {
+          return $("#fieldTypeSelector").val(fromType);
+        }
       }
     };
 
     EditFieldView.prototype.changeEditingFieldType = function(fromType, toType) {
       /*
-      if (Formbuilder.fields[fromType].getDataForTranslation)
-        # some fields store their data in non-standard ways. Grab it from them if possible
-        translationData = Formbuilder.fields[fromType].getDataForTranslation(@model)
-      else
-        # otherwise, stub it out
-        translationData = { label: null, options: null, defaultValue: null }
+      other possibility - in fields/[input_type].coffee, fields that require custom behavior can define functions like:
+            getDataForTranslation: ((model) ->
+              return { label: model.get(Formbuilder.options.mappings.DESCRIPTION) }
+              )
       
-      # now let's use default values for any fields that haven't defined custom behavior in their
-      # getDataForTranslation function (or haven't exposed such a function at all)
-      if (translationData.label == null)
-        translationData.label = @model.get(Formbuilder.options.mappings.LABEL)
+            setDataForTranslation: ((model, translationData) ->
+              model.set(Formbuilder.options.mappings.LABEL, "Text Comment")
+              model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.label)
+              )
       
-      if (translationData.defaultValue == null)
-        translationData.defaultValue = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
+      and then this function could hook into it thusly:
+            if (Formbuilder.fields[fromType].getDataForTranslation)
+              # some fields store their data in non-standard ways. Grab it from them if possible
+              translationData = Formbuilder.fields[fromType].getDataForTranslation(@model)
       
-      if (translationData.options == null)
-        translationData.options = _.clone(@model.get(Formbuilder.options.mappings.OPTIONS))
+      problem is since those individual coffee files for the field types aren't really classes, we lose a lot of 
+      the benefits of this approach - can't do real base class functionality, so this logic would end up mixed between
+      those individual coffee files and this function for default behavior.
+      
+      At some point might be nice to rethink how those fields register themselves, but for now we can
+      contain the logic to this one function at least, so it's manageable.
       */
 
       var checksSeen, idx, o, onlyAllowOneCheck, translationData, _i, _len, _ref6;
@@ -361,14 +401,16 @@
           onlyAllowOneCheck = fromType === "checkboxes";
           if (onlyAllowOneCheck) {
             checksSeen = 0;
-            _ref6 = this.model.get(Formbuilder.options.mappings.OPTIONS);
-            for (idx = _i = 0, _len = _ref6.length; _i < _len; idx = ++_i) {
-              o = _ref6[idx];
-              if (o.checked) {
-                if (checksSeen > 0) {
-                  o.checked = false;
+            if (this.model.get(Formbuilder.options.mappings.OPTIONS)) {
+              _ref6 = this.model.get(Formbuilder.options.mappings.OPTIONS);
+              for (idx = _i = 0, _len = _ref6.length; _i < _len; idx = ++_i) {
+                o = _ref6[idx];
+                if (o.checked) {
+                  if (checksSeen > 0) {
+                    o.checked = false;
+                  }
+                  checksSeen++;
                 }
-                checksSeen++;
               }
             }
           }
@@ -391,19 +433,6 @@
       if (translationData.options !== null) {
         this.model.set(Formbuilder.options.mappings.OPTIONS, translationData.options);
       }
-      /*
-      if (Formbuilder.fields[toType].setDataForTranslation)
-        Formbuilder.fields[toType].setDataForTranslation(@model, translationData)
-      else
-        @model.set(Formbuilder.options.mappings.LABEL, translationData.label)
-      
-        if (translationData.options != null)
-          @model.set(Formbuilder.options.mappings.OPTIONS, translationData.options)
-      
-        if (translationData.defaultValue != null)
-          @model.set(Formbuilder.options.mappings.DEFAULT_VALUE, translationData.defaultValue)
-      */
-
       this.forceRender();
       return this.parentView.createAndShowEditView(this.model, true);
     };
@@ -1331,16 +1360,7 @@
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Text Comment');
       return attrs;
-    },
-    getDataForTranslation: (function(model) {
-      return {
-        label: model.get(Formbuilder.options.mappings.DESCRIPTION)
-      };
-    }),
-    setDataForTranslation: (function(model, translationData) {
-      model.set(Formbuilder.options.mappings.LABEL, "Text Comment");
-      return model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.label);
-    })
+    }
   });
 
 }).call(this);
@@ -1633,7 +1653,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\t// var fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\n\t}\n  </script>\n\n\t<p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n</div>\n';
+'\n  </div>\n</div>';
 
 }
 return __p
