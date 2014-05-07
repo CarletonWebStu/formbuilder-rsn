@@ -7,7 +7,7 @@ $negative-color = #e74c3c
 $editing-bg = #ecf0f1
 $editing-border = darken($editing-bg, 7%)
 
-* {
+.fb-wrap, .fb-wrap * {
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
@@ -70,6 +70,10 @@ $editing-border = darken($editing-bg, 7%)
   padding-left: 20px;
   min-height: 100%;
   overflow: hidden;
+}
+
+.fb-op-buttons-wrapper+.fb-left, .fb-op-buttons-wrapper+.fb-left+.fb-right {
+	padding-top:10px;
 }
 
 .fb-no-response-fields {
