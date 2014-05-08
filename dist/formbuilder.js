@@ -256,8 +256,11 @@
     };
 
     EditFieldView.prototype.render = function() {
-      var allowTypeChange, _ref6,
+      var allowTypeChange, dvalIsEmpty, storedDefaultVal, _ref6,
         _this = this;
+      storedDefaultVal = this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE);
+      dvalIsEmpty = storedDefaultVal === null || storedDefaultVal === void 0 || emptyOrWhitespaceRegex.test(storedDefaultVal);
+      this.model.attributes.displayDefaultValueUI = !dvalIsEmpty;
       this.$el.html(Formbuilder.templates["edit/base" + (!this.model.is_input() ? '_non_input' : '')]({
         rf: this.model
       }));
@@ -972,7 +975,7 @@
         return x != null ? x.replace(/\n/g, '<br />') : void 0;
       },
       warnIfEmpty: function(s, warning) {
-        if (emptyOrWhitespaceRegex.test(s)) {
+        if (s === null || s === void 0 || emptyOrWhitespaceRegex.test(s)) {
           return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>";
         }
         return s;
@@ -1035,9 +1038,14 @@
     Formbuilder.prototype.debug = {};
 
     Formbuilder.getSupportedFields = function() {
-      var rv;
-      rv = {};
-      $.extend(true, rv, this.inputFields, this.nonInputFields);
+      var merged, rv,
+        _this = this;
+      merged = {};
+      $.extend(true, merged, this.inputFields, this.nonInputFields);
+      rv = _(merged).map(function(obj, key) {
+        return key;
+      });
+      rv.sort();
       return rv;
     };
 
@@ -1433,7 +1441,7 @@ var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
 function print() { __p += __j.call(arguments, '') }
 with (obj) {
 __p += '<div>\n\t<div id="fieldDisplayEditable" style="display:none">\n\t\tField Type: \n\t\t<select id="fieldTypeSelector">\n\t\t\t';
- _(Formbuilder.getSupportedFields()).each(function(fieldProps, fieldName) { ;
+ _(Formbuilder.getSupportedFields()).each(function(fieldName) { ;
 __p += '\n\t\t\t<option value="' +
 ((__t = (fieldName)) == null ? '' : __t) +
 '">' +
@@ -1492,11 +1500,18 @@ return __p
 
 this["Formbuilder"]["templates"]["edit/defaultVal"] = function(obj) {
 obj || (obj = {});
-var __t, __p = '', __e = _.escape;
+var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
+function print() { __p += __j.call(arguments, '') }
 with (obj) {
-__p += '<div class=\'fb-edit-section-header\'>Default Value</div>\n  <div class=\'fb-default_value-description\'>\n\t\t<input type=\'text\' data-rv-input=\'model.' +
+__p += '<!-- <div data-rv-show="model.' +
 ((__t = ( Formbuilder.options.mappings.DEFAULT_VALUE )) == null ? '' : __t) +
-'\' />\n  </div>\n\n';
+' == \'tom\'"> -->\n<div data-rv-show="model.displayDefaultValueUI">\n\t\t';
+ /* ;
+__p += '\n\t\t<P>debugger 4: [<span data-rv-text=\'model.default_value\'></span>]\n\t\t<P>debugger 5: [<span data-rv-text=\'model.displayDefaultValueUI\'></span>]\n\t\t';
+ */ ;
+__p += '\n<div class=\'fb-edit-section-header\'>Default Value</div>\n  <div class=\'fb-default_value-description\'>\n\t\t<textarea data-rv-input=\'model.' +
+((__t = ( Formbuilder.options.mappings.DEFAULT_VALUE )) == null ? '' : __t) +
+'\' /></textarea>\n  </div>\n</div>\n';
 
 }
 return __p
@@ -1682,7 +1697,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n\t\t\t// fb.isFormReadyToSave();\n\n    }\n    </script>\n\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n  </div>\n';
+'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n\t\t\t// fb.isFormReadyToSave();\n\n    }\n    </script>\n\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n  </div>\n';
 
 }
 return __p

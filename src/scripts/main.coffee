@@ -83,6 +83,12 @@ class EditFieldView extends Backbone.View
     @listenTo @model, "remove", @remove
 
   render: ->
+    # special case - only show the "default value" UI if user has previously put data in for it
+    storedDefaultVal = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
+    dvalIsEmpty = storedDefaultVal == null || storedDefaultVal == undefined || emptyOrWhitespaceRegex.test(storedDefaultVal)
+    # stuff a val into the model so that rivets can render appropriately
+    @model.attributes.displayDefaultValueUI = (not dvalIsEmpty)
+
     @$el.html(Formbuilder.templates["edit/base#{if !@model.is_input() then '_non_input' else ''}"]({rf: @model}))
     rivets.bind @$el, { model: @model }
 
@@ -699,6 +705,7 @@ class BuilderView extends Backbone.View
     @collection.create(restoree.get('model'), {position: restoree.get('position')})
 
 class Formbuilder
+
   @helpers:
     defaultFieldAttrs: (field_type) ->
       attrs = {}
@@ -712,7 +719,7 @@ class Formbuilder
       x?.replace(/\n/g, '<br />')
 
     warnIfEmpty: (s, warning) ->
-      if (emptyOrWhitespaceRegex.test(s))
+      if (s == null || s == undefined || emptyOrWhitespaceRegex.test(s))
         return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>"
       s
 
@@ -772,9 +779,18 @@ class Formbuilder
   @nonInputFields: {}
   debug: {}
 
+  # returns an array of field types that we support
   @getSupportedFields: () ->
-    rv = {}
-    $.extend(true, rv, @inputFields, @nonInputFields)
+    merged = {}
+    $.extend(true, merged, @inputFields, @nonInputFields)
+
+    rv = _(merged).map((obj, key) =>
+      key
+      )
+
+    rv.sort()
+
+    # rv = ["checkboxes","text"]
     # rv = @inputFields
     # console.log "look:"
     # console.log rv

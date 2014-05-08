@@ -2,7 +2,7 @@
 	<div id="fieldDisplayEditable" style="display:none">
 		Field Type: 
 		<select id="fieldTypeSelector">
-			<% _(Formbuilder.getSupportedFields()).each(function(fieldProps, fieldName) { %>
+			<% _(Formbuilder.getSupportedFields()).each(function(fieldName) { %>
 			<option value="<%=fieldName%>"><%= fieldName %></option>
 			<% }); %>
 		</select>
