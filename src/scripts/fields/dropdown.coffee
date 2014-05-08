@@ -13,10 +13,14 @@ Formbuilder.registerField 'dropdown',
         for (var i = 0 ; i < optionsForLooping.length ; i++) {
       %>
         <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>
-          <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>
+          <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>
         </option>
       <% } %>
     </select>
+
+    <% if (optionsForLooping.length == 0) { %>
+        <%= Formbuilder.helpers.warnIfEmpty("", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>
+    <% } %>
   """
 
   edit: """

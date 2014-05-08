@@ -1,3 +1,5 @@
+emptyOrWhitespaceRegex = RegExp(/^\s*$/)
+
 class FormbuilderModel extends Backbone.DeepModel
   sync: -> # noop
   indexInDOM: ->
@@ -81,6 +83,12 @@ class EditFieldView extends Backbone.View
     @listenTo @model, "remove", @remove
 
   render: ->
+    # special case - only show the "default value" UI if user has previously put data in for it
+    storedDefaultVal = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
+    dvalIsEmpty = storedDefaultVal == null || storedDefaultVal == undefined || emptyOrWhitespaceRegex.test(storedDefaultVal)
+    # stuff a val into the model so that rivets can render appropriately
+    @model.attributes.displayDefaultValueUI = (not dvalIsEmpty)
+
     @$el.html(Formbuilder.templates["edit/base#{if !@model.is_input() then '_non_input' else ''}"]({rf: @model}))
     rivets.bind @$el, { model: @model }
 
@@ -93,7 +101,170 @@ class EditFieldView extends Backbone.View
                                                 stop: ((evt, ui) => @completedOptionDrag(evt, ui)),
                                                 handle: ".js-drag-handle"})
       ), 10)
+
+    allowTypeChange = Formbuilder.options.ALLOW_TYPE_CHANGE
+    if (@model.attributes.field_type == "submit_button")
+      allowTypeChange = false
+    setTimeout((=>
+      if (allowTypeChange)
+
+        $("#fieldDisplayEditable").css("display", "block")
+
+        # now we need to do some setup on the "fieldTypeSelector" dropdown...first highlight the relevant option
+        $("#fieldTypeSelector").val(@model.attributes.field_type)
+
+        # and now listen for changes
+        $("#fieldTypeSelector").change((=>
+          fromType = @model.attributes.field_type
+          toType = $("#fieldTypeSelector").val()
+          @changeEditingFieldTypeWithDataLossWarning(fromType, toType)
+        ))
+
+        $("#fieldDisplayNonEditable").remove()
+      else
+        $("#fieldDisplayNonEditable").css("display", "block")
+        $("#fieldDisplayEditable").remove()
+
+    ), 10)
+
     return @
+
+  dataWasEntered: (data) ->
+    console.log "checking data [" + data + "]..."
+    if (data != null and data != undefined and data != "")
+      return true
+    else
+      return false
+    
+
+  # converting from one field to another may cause some loss of data. This checks to see
+  # if we're in such a situation, and warns the user if so.
+  changeEditingFieldTypeWithDataLossWarning: (fromType, toType) ->
+    if (fromType == toType)
+      return
+
+    multiFields = ["radio","checkboxes","dropdown"]
+
+    warning = ""
+
+    if (fromType in ["text", "paragraph"])
+      # text/paragraph types have a "default value" - if this is present, and we're switching to certain types, need to warn...
+      if (toType not in ["text", "paragraph"])
+        inputData = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
+        if (@dataWasEntered(inputData))
+          warning = "you will lose the default value text \"" + inputData + "\""
+    else if (fromType == "text_comment")
+      # every translation is ok
+    else if (fromType == "hidden_field")
+      inputData = @model.get(Formbuilder.options.mappings.DESCRIPTION)
+      if (@dataWasEntered(inputData))
+        warning = "you will lose the data text \"" + inputData + "\""
+    else if (fromType in multiFields)
+      # are there any options, and how many are checked?
+      numOptions = 0
+      numCheckedOptions = 0
+      if (@model.get(Formbuilder.options.mappings.OPTIONS))
+        for o in @model.get(Formbuilder.options.mappings.OPTIONS)
+          numOptions++
+          if (o.checked)
+            numCheckedOptions++
+
+      if (toType in multiFields)
+        if (fromType == "checkboxes" and numCheckedOptions > 1)
+          warning = "only one option can be checked by default"
+      else
+        if (numOptions > 0)
+          warning = "you will lose all your entered options"
+    else
+      console.log "change_type from [" + fromType + "] to [" + toType + "] is not supported"
+      $("#fieldTypeSelector").val(fromType)
+      return
+
+    if (warning == "")
+      @changeEditingFieldType(fromType, toType)
+    else
+      warning = "Warning - by changing this field from \"" + fromType + "\" to \"" + toType + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!"
+
+      if (confirm(warning))
+        @changeEditingFieldType(fromType, toType)
+      else
+        $("#fieldTypeSelector").val(fromType)
+
+  changeEditingFieldType: (fromType, toType) ->
+    ###
+    other possibility - in fields/[input_type].coffee, fields that require custom behavior can define functions like:
+          getDataForTranslation: ((model) ->
+            return { label: model.get(Formbuilder.options.mappings.DESCRIPTION) }
+            )
+
+          setDataForTranslation: ((model, translationData) ->
+            model.set(Formbuilder.options.mappings.LABEL, "Text Comment")
+            model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.label)
+            )
+    
+    and then this function could hook into it thusly:
+          if (Formbuilder.fields[fromType].getDataForTranslation)
+            # some fields store their data in non-standard ways. Grab it from them if possible
+            translationData = Formbuilder.fields[fromType].getDataForTranslation(@model)
+
+    problem is since those individual coffee files for the field types aren't really classes, we lose a lot of 
+    the benefits of this approach - can't do real base class functionality, so this logic would end up mixed between
+    those individual coffee files and this function for default behavior.
+
+    At some point might be nice to rethink how those fields register themselves, but for now we can
+    contain the logic to this one function at least, so it's manageable.
+    ###
+
+    translationData = { pseudoLabel: null, options: null, defaultValue: null }
+    if (fromType in ["text_comment"])
+      translationData.pseudoLabel = @model.get(Formbuilder.options.mappings.DESCRIPTION)
+    else
+      translationData.pseudoLabel = @model.get(Formbuilder.options.mappings.LABEL)
+
+    if (fromType in ["text", "paragraph"] and toType in ["text", "paragraph"])
+      translationData.defaultValue = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
+
+    if (toType in ["radio", "checkboxes", "dropdown"])
+      if (fromType in ["radio", "checkboxes", "dropdown"])
+        # checkboxes allow multiple prechecks; radio/dropdown do not. If we're moving from checkboxes, need to make sure no more than one thing is checked...
+        onlyAllowOneCheck = fromType == "checkboxes"
+        if (onlyAllowOneCheck)
+          checksSeen = 0
+          if (@model.get(Formbuilder.options.mappings.OPTIONS))
+            for o, idx in @model.get(Formbuilder.options.mappings.OPTIONS)
+              if (o.checked)
+                if (checksSeen > 0)
+                  o.checked = false
+                checksSeen++
+
+        translationData.options = _.clone(@model.get(Formbuilder.options.mappings.OPTIONS))
+
+    console.log "label set to [" + translationData.pseudoLabel + "]"
+
+    # we've extracted the relevant data; now let's update the model
+    # delete stuff that may not exist on the destination type; it'll get re-created if necessary
+    delete @model.attributes.field_options
+    delete @model.attributes.default_value
+
+    # everything has a field type
+    @model.set(Formbuilder.options.mappings.FIELD_TYPE, toType)
+
+    # most things store label in label, but text comment is a little screwy
+    if (toType in ["text_comment"])
+      @model.set(Formbuilder.options.mappings.LABEL, Formbuilder.fields[toType].defaultAttributes({})[Formbuilder.options.mappings.LABEL])
+      @model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.pseudoLabel)
+    else
+      @model.set(Formbuilder.options.mappings.LABEL, translationData.pseudoLabel)
+
+    if (translationData.defaultValue != null)
+      @model.set(Formbuilder.options.mappings.DEFAULT_VALUE, translationData.defaultValue)
+
+    if (translationData.options != null)
+      @model.set(Formbuilder.options.mappings.OPTIONS, translationData.options)
+
+    @forceRender() # re-renders the right-hand-side of page
+    @parentView.createAndShowEditView(@model, true) # updates the edit view
+        
   
   debugOptions: (opts) ->
     rv = ""
@@ -412,13 +583,14 @@ class BuilderView extends Backbone.View
       $.scrollWindowTo destination, 200
     # else, user selected the "duplicate" button. note that if user dragged a field onto right side, this method does not fire!
 
-  createAndShowEditView: (model) ->
+  # allowRepeatCreation allows us to re-create an edit view that is already active. This is used when we change the field_type of a form element during editing.
+  createAndShowEditView: (model, allowRepeatCreation = false) ->
     $responseFieldEl = @$el.find(".fb-field-wrapper").filter( -> $(@).data('cid') == model.cid )
     #Set the editing classes, including fb-field-wrapper outside the list too (ad-hoc for last submit.)
     $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing')
 
     if @editView
-      if @editView.model.cid is model.cid
+      if @editView.model.cid is model.cid and not allowRepeatCreation
         @$el.find(".fb-tabs a[data-target=\"#editField\"]").click()
         @scrollLeftWrapper $responseFieldEl, (oldPadding? && oldPadding)
         return
@@ -533,10 +705,11 @@ class BuilderView extends Backbone.View
     @collection.create(restoree.get('model'), {position: restoree.get('position')})
 
 class Formbuilder
+
   @helpers:
     defaultFieldAttrs: (field_type) ->
       attrs = {}
-      _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Untitled')
+      _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, '')
       _.pathAssign(attrs, Formbuilder.options.mappings.FIELD_TYPE, field_type)
       _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, Formbuilder.options.REQUIRED_DEFAULT)
 
@@ -544,6 +717,11 @@ class Formbuilder
 
     simple_format: (x) ->
       x?.replace(/\n/g, '<br />')
+
+    warnIfEmpty: (s, warning) ->
+      if (s == null || s == undefined || emptyOrWhitespaceRegex.test(s))
+        return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>"
+      s
 
   # take two - just use underscore utility to generate a unique id, prefixed with "c" also so that we
   # don't collide with the id's generated for the other form elements. (in the db these will all be getting
@@ -560,6 +738,7 @@ class Formbuilder
     WARN_IF_UNSAVED: true # this is on navigation away
     FORCE_BOTTOM_SUBMIT: true
     REQUIRED_DEFAULT: true
+    ALLOW_TYPE_CHANGE: false
 
     UNLISTED_FIELDS: [
      'submit_button'
@@ -586,6 +765,9 @@ class Formbuilder
 
     dict:
       ALL_CHANGES_SAVED: 'All changes saved'
+      EMPTY_LABEL_WARNING: 'Enter a label'
+      EMPTY_OPTION_WARNING: 'Enter a name'
+      EMPTY_OPTION_LIST_WARNING: 'Enter options'
       SAVE_FORM: 'Save form'
       UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!'
       NOTHING_TO_UNDO: 'Nothing to restore'
@@ -596,6 +778,23 @@ class Formbuilder
   @inputFields: {}
   @nonInputFields: {}
   debug: {}
+
+  # returns an array of field types that we support
+  @getSupportedFields: () ->
+    merged = {}
+    $.extend(true, merged, @inputFields, @nonInputFields)
+
+    rv = _(merged).map((obj, key) =>
+      key
+      )
+
+    rv.sort()
+
+    # rv = ["checkboxes","text"]
+    # rv = @inputFields
+    # console.log "look:"
+    # console.log rv
+    return rv
 
   @registerField: (name, opts) ->
     for x in ['view', 'edit']

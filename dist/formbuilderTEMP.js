@@ -88,13 +88,11 @@
 }).call(this);
 
 (function() {
-  var BuilderView, DeletedFieldCollection, DeletedFieldModel, EditFieldView, Formbuilder, FormbuilderCollection, FormbuilderModel, ViewFieldView, emptyOrWhitespaceRegex, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
+  var BuilderView, DeletedFieldCollection, DeletedFieldModel, EditFieldView, Formbuilder, FormbuilderCollection, FormbuilderModel, ViewFieldView, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-  emptyOrWhitespaceRegex = RegExp(/^\s*$/);
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   FormbuilderModel = (function(_super) {
     __extends(FormbuilderModel, _super);
@@ -256,11 +254,8 @@
     };
 
     EditFieldView.prototype.render = function() {
-      var allowTypeChange, dvalIsEmpty, storedDefaultVal, _ref6,
+      var _ref6,
         _this = this;
-      storedDefaultVal = this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE);
-      dvalIsEmpty = storedDefaultVal === null || storedDefaultVal === void 0 || emptyOrWhitespaceRegex.test(storedDefaultVal);
-      this.model.attributes.displayDefaultValueUI = !dvalIsEmpty;
       this.$el.html(Formbuilder.templates["edit/base" + (!this.model.is_input() ? '_non_input' : '')]({
         rf: this.model
       }));
@@ -281,124 +276,73 @@
           });
         }), 10);
       }
-      allowTypeChange = Formbuilder.options.ALLOW_TYPE_CHANGE;
-      if (this.model.attributes.field_type === "submit_button") {
-        allowTypeChange = false;
-      }
       setTimeout((function() {
-        if (allowTypeChange) {
-          $("#fieldDisplayEditable").css("display", "block");
-          $("#fieldTypeSelector").val(_this.model.attributes.field_type);
-          $("#fieldTypeSelector").change((function() {
-            var fromType, toType;
-            fromType = _this.model.attributes.field_type;
-            toType = $("#fieldTypeSelector").val();
-            return _this.changeEditingFieldTypeWithDataLossWarning(fromType, toType);
-          }));
-          return $("#fieldDisplayNonEditable").remove();
-        } else {
-          $("#fieldDisplayNonEditable").css("display", "block");
-          return $("#fieldDisplayEditable").remove();
-        }
+        $("#fieldTypeSelector").val(_this.model.attributes.field_type);
+        return $("#fieldTypeSelector").change((function() {
+          var fromType, toType;
+          fromType = _this.model.attributes.field_type;
+          toType = $("#fieldTypeSelector").val();
+          return _this.changeEditingFieldTypeWithDataLossWarning(fromType, toType);
+        }));
       }), 10);
       return this;
     };
 
-    EditFieldView.prototype.dataWasEntered = function(data) {
-      console.log("checking data [" + data + "]...");
-      if (data !== null && data !== void 0 && data !== "") {
-        return true;
-      } else {
-        return false;
-      }
-    };
-
     EditFieldView.prototype.changeEditingFieldTypeWithDataLossWarning = function(fromType, toType) {
-      var inputData, multiFields, numCheckedOptions, numOptions, o, warning, _i, _len, _ref6;
-      if (fromType === toType) {
-        return;
-      }
-      multiFields = ["radio", "checkboxes", "dropdown"];
-      warning = "";
-      if ((fromType === "text" || fromType === "paragraph")) {
-        if ((toType !== "text" && toType !== "paragraph")) {
-          inputData = this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE);
-          if (this.dataWasEntered(inputData)) {
-            warning = "you will lose the default value text \"" + inputData + "\"";
-          }
-        }
-      } else if (fromType === "text_comment") {
+      /*
+      if (fromType == toType)
+        return
+      
+      multiFields = ["radio","checkboxes","dropdown"]
+      
+      warning = ""
+      
+      if (fromType in ["text", "paragraph"])
+        if (fromType not in ["text", "paragraph"])
+          warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose 'default value' data."
+      else if (fromType in ["hidden_field", "text_comment"])
+        # every translation is allowed with no lost data
+      else if (fromType in multiFields)
+        if (toType in multiFields)
+          if (fromType == "checkboxes")
+            warning = "when changing a field from '" + fromType + "' to '" + toType + "' you may lose some data."
+        else
+            warning = "when changing a field from '" + fromType + "' to '" + toType + "' you will lose any entered 'options' data."
+      
+      if (warning == "")
+        @changeEditingFieldType(fromType, toType)
+      else
+        if (confirm('Warning - ' + warning))
+          @changeEditingFieldType(fromType, toType)
+      */
 
-      } else if (fromType === "hidden_field") {
-        inputData = this.model.get(Formbuilder.options.mappings.DESCRIPTION);
-        if (this.dataWasEntered(inputData)) {
-          warning = "you will lose the data text \"" + inputData + "\"";
-        }
-      } else if ((__indexOf.call(multiFields, fromType) >= 0)) {
-        numOptions = 0;
-        numCheckedOptions = 0;
-        if (this.model.get(Formbuilder.options.mappings.OPTIONS)) {
-          _ref6 = this.model.get(Formbuilder.options.mappings.OPTIONS);
-          for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
-            o = _ref6[_i];
-            numOptions++;
-            if (o.checked) {
-              numCheckedOptions++;
-            }
-          }
-        }
-        if ((__indexOf.call(multiFields, toType) >= 0)) {
-          if (fromType === "checkboxes" && numCheckedOptions > 1) {
-            warning = "only one option can be checked by default";
-          }
-        } else {
-          if (numOptions > 0) {
-            warning = "you will lose all your entered options";
-          }
-        }
-      } else {
-        console.log("change_type from [" + fromType + "] to [" + toType + "] is not supported");
-        $("#fieldTypeSelector").val(fromType);
-        return;
-      }
-      if (warning === "") {
+      if (true || confirm('Warning - changing field types may lose some form structure. Do you want to continue?')) {
         return this.changeEditingFieldType(fromType, toType);
-      } else {
-        warning = "Warning - by changing this field from \"" + fromType + "\" to \"" + toType + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!";
-        if (confirm(warning)) {
-          return this.changeEditingFieldType(fromType, toType);
-        } else {
-          return $("#fieldTypeSelector").val(fromType);
-        }
       }
     };
 
     EditFieldView.prototype.changeEditingFieldType = function(fromType, toType) {
       /*
-      other possibility - in fields/[input_type].coffee, fields that require custom behavior can define functions like:
-            getDataForTranslation: ((model) ->
-              return { label: model.get(Formbuilder.options.mappings.DESCRIPTION) }
-              )
+      if (Formbuilder.fields[fromType].getDataForTranslation)
+        # some fields store their data in non-standard ways. Grab it from them if possible
+        translationData = Formbuilder.fields[fromType].getDataForTranslation(@model)
+      else
+        # otherwise, stub it out
+        translationData = { label: null, options: null, defaultValue: null }
       
-            setDataForTranslation: ((model, translationData) ->
-              model.set(Formbuilder.options.mappings.LABEL, "Text Comment")
-              model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.label)
-              )
+      # now let's use default values for any fields that haven't defined custom behavior in their
+      # getDataForTranslation function (or haven't exposed such a function at all)
+      if (translationData.label == null)
+        translationData.label = @model.get(Formbuilder.options.mappings.LABEL)
       
-      and then this function could hook into it thusly:
-            if (Formbuilder.fields[fromType].getDataForTranslation)
-              # some fields store their data in non-standard ways. Grab it from them if possible
-              translationData = Formbuilder.fields[fromType].getDataForTranslation(@model)
+      if (translationData.defaultValue == null)
+        translationData.defaultValue = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
       
-      problem is since those individual coffee files for the field types aren't really classes, we lose a lot of 
-      the benefits of this approach - can't do real base class functionality, so this logic would end up mixed between
-      those individual coffee files and this function for default behavior.
-      
-      At some point might be nice to rethink how those fields register themselves, but for now we can
-      contain the logic to this one function at least, so it's manageable.
+      if (translationData.options == null)
+        translationData.options = _.clone(@model.get(Formbuilder.options.mappings.OPTIONS))
       */
 
-      var checksSeen, idx, o, onlyAllowOneCheck, translationData, _i, _len, _ref6;
+      var translationData;
       translationData = {
         pseudoLabel: null,
         options: null,
@@ -409,45 +353,37 @@
       } else {
         translationData.pseudoLabel = this.model.get(Formbuilder.options.mappings.LABEL);
       }
-      if ((fromType === "text" || fromType === "paragraph") && (toType === "text" || toType === "paragraph")) {
+      if ((fromType === "text" || fromType === "paragraph")) {
         translationData.defaultValue = this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE);
       }
-      if ((toType === "radio" || toType === "checkboxes" || toType === "dropdown")) {
-        if ((fromType === "radio" || fromType === "checkboxes" || fromType === "dropdown")) {
-          onlyAllowOneCheck = fromType === "checkboxes";
-          if (onlyAllowOneCheck) {
-            checksSeen = 0;
-            if (this.model.get(Formbuilder.options.mappings.OPTIONS)) {
-              _ref6 = this.model.get(Formbuilder.options.mappings.OPTIONS);
-              for (idx = _i = 0, _len = _ref6.length; _i < _len; idx = ++_i) {
-                o = _ref6[idx];
-                if (o.checked) {
-                  if (checksSeen > 0) {
-                    o.checked = false;
-                  }
-                  checksSeen++;
-                }
-              }
-            }
-          }
-          translationData.options = _.clone(this.model.get(Formbuilder.options.mappings.OPTIONS));
-        }
+      if ((fromType === "radio" || fromType === "checkboxes" || fromType === "dropdown")) {
+        console.log(this.model);
+        return;
       }
       console.log("label set to [" + translationData.pseudoLabel + "]");
+      if ((toType !== "text" && toType !== "paragraph")) {
+        translationData.defaultValue = null;
+      }
+      if ((toType !== "radio" && toType !== "checkboxes" && toType !== "dropdown")) {
+        translationData.options = null;
+      } else {
+        if (translationData.options !== null && fromType === "checkboxes") {
+          console.log("NOT IMPLEMENTED");
+        }
+      }
       delete this.model.attributes.field_options;
       delete this.model.attributes.default_value;
       this.model.set(Formbuilder.options.mappings.FIELD_TYPE, toType);
-      if ((toType === "text_comment")) {
-        this.model.set(Formbuilder.options.mappings.LABEL, Formbuilder.fields[toType].defaultAttributes({})[Formbuilder.options.mappings.LABEL]);
-        this.model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.pseudoLabel);
+      if (Formbuilder.fields[toType].setDataForTranslation) {
+        Formbuilder.fields[toType].setDataForTranslation(this.model, translationData);
       } else {
-        this.model.set(Formbuilder.options.mappings.LABEL, translationData.pseudoLabel);
-      }
-      if (translationData.defaultValue !== null) {
-        this.model.set(Formbuilder.options.mappings.DEFAULT_VALUE, translationData.defaultValue);
-      }
-      if (translationData.options !== null) {
-        this.model.set(Formbuilder.options.mappings.OPTIONS, translationData.options);
+        this.model.set(Formbuilder.options.mappings.LABEL, translationData.label);
+        if (translationData.options !== null) {
+          this.model.set(Formbuilder.options.mappings.OPTIONS, translationData.options);
+        }
+        if (translationData.defaultValue !== null) {
+          this.model.set(Formbuilder.options.mappings.DEFAULT_VALUE, translationData.defaultValue);
+        }
       }
       this.forceRender();
       return this.parentView.createAndShowEditView(this.model, true);
@@ -966,19 +902,13 @@
       defaultFieldAttrs: function(field_type) {
         var attrs, _base;
         attrs = {};
-        _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, '');
+        _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Untitled');
         _.pathAssign(attrs, Formbuilder.options.mappings.FIELD_TYPE, field_type);
         _.pathAssign(attrs, Formbuilder.options.mappings.REQUIRED, Formbuilder.options.REQUIRED_DEFAULT);
         return (typeof (_base = Formbuilder.fields[field_type]).defaultAttributes === "function" ? _base.defaultAttributes(attrs) : void 0) || attrs;
       },
       simple_format: function(x) {
         return x != null ? x.replace(/\n/g, '<br />') : void 0;
-      },
-      warnIfEmpty: function(s, warning) {
-        if (s === null || s === void 0 || emptyOrWhitespaceRegex.test(s)) {
-          return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>";
-        }
-        return s;
       }
     };
 
@@ -994,7 +924,6 @@
       WARN_IF_UNSAVED: true,
       FORCE_BOTTOM_SUBMIT: true,
       REQUIRED_DEFAULT: true,
-      ALLOW_TYPE_CHANGE: false,
       UNLISTED_FIELDS: ['submit_button'],
       mappings: {
         SIZE: 'field_options.size',
@@ -1017,9 +946,6 @@
       },
       dict: {
         ALL_CHANGES_SAVED: 'All changes saved',
-        EMPTY_LABEL_WARNING: 'Enter a label',
-        EMPTY_OPTION_WARNING: 'Enter a name',
-        EMPTY_OPTION_LIST_WARNING: 'Enter options',
         SAVE_FORM: 'Save form',
         UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!',
         NOTHING_TO_UNDO: 'Nothing to restore',
@@ -1038,14 +964,9 @@
     Formbuilder.prototype.debug = {};
 
     Formbuilder.getSupportedFields = function() {
-      var merged, rv,
-        _this = this;
-      merged = {};
-      $.extend(true, merged, this.inputFields, this.nonInputFields);
-      rv = _(merged).map(function(obj, key) {
-        return key;
-      });
-      rv.sort();
+      var rv;
+      rv = {};
+      $.extend(true, rv, this.inputFields, this.nonInputFields);
       return rv;
     };
 
@@ -1203,7 +1124,7 @@
 (function() {
   Formbuilder.registerField('checkboxes', {
     order: 10,
-    view: "<%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='checkbox' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </label>\n  </div>\n<% } %>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='checkbox' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
+    view: "<%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='checkbox' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>\n    </label>\n  </div>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='checkbox' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
     edit: "<%= Formbuilder.templates['edit/options']() %>",
     /*was: """
       <%= Formbuilder.templates['edit/options']({ includeOther: true }) %>
@@ -1232,7 +1153,7 @@
 (function() {
   Formbuilder.registerField('dropdown', {
     order: 24,
-    view: "<select>\n  <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>\n    <option value=''></option>\n  <% } %>\n\n  <%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n  %>\n    <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </option>\n  <% } %>\n</select>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>",
+    view: "<select>\n  <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>\n    <option value=''></option>\n  <% } %>\n\n  <%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n  %>\n    <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>\n      <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>\n    </option>\n  <% } %>\n</select>",
     edit: "<%= Formbuilder.templates['edit/options']() %>",
     /*was:  """
       <%= Formbuilder.templates['edit/options']({ includeBlank: true }) %>
@@ -1323,7 +1244,7 @@
 (function() {
   Formbuilder.registerField('radio', {
     order: 15,
-    view: "<%\n  var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n  for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='radio' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </label>\n  </div>\n<% } %>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='radio' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
+    view: "<%\n  var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n  for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='radio' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>\n    </label>\n  </div>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='radio' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
     edit: "<%= Formbuilder.templates['edit/options']() %>",
     /* was: """
       <%= Formbuilder.templates['edit/options']({ includeOther: true }) %>
@@ -1354,7 +1275,7 @@
   Formbuilder.registerField('submit_button', {
     order: 20,
     type: 'non_input',
-    view: "<button disabled><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
+    view: "<button><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
     edit: "<div class='fb-edit-section-header'>Button Label</div>\n<input type=\"text\" data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>'></input>",
     addButton: "<span class='symbol'><span class='fa fa-inbox'></span></span> Submit Button",
     defaultAttributes: function(attrs) {
@@ -1391,7 +1312,16 @@
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Text Comment');
       return attrs;
-    }
+    },
+    getDataForTranslation: (function(model) {
+      return {
+        label: model.get(Formbuilder.options.mappings.DESCRIPTION)
+      };
+    }),
+    setDataForTranslation: (function(model, translationData) {
+      model.set(Formbuilder.options.mappings.LABEL, "Text Comment");
+      return model.set(Formbuilder.options.mappings.DESCRIPTION, translationData.label);
+    })
   });
 
 }).call(this);
@@ -1440,17 +1370,15 @@ obj || (obj = {});
 var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
 function print() { __p += __j.call(arguments, '') }
 with (obj) {
-__p += '<div>\n\t<div id="fieldDisplayEditable" style="display:none">\n\t\tField Type: \n\t\t<select id="fieldTypeSelector">\n\t\t\t';
- _(Formbuilder.getSupportedFields()).each(function(fieldName) { ;
-__p += '\n\t\t\t<option value="' +
+__p += '<div>\n\tField Type: \n\t<select id="fieldTypeSelector">\n\t\t';
+ _(Formbuilder.getSupportedFields()).each(function(fieldProps, fieldName) { ;
+__p += '\n\t\t<option value="' +
 ((__t = (fieldName)) == null ? '' : __t) +
 '">' +
 ((__t = ( fieldName )) == null ? '' : __t) +
-'</option>\n\t\t\t';
+'</option>\n\t\t';
  }); ;
-__p += '\n\t\t</select>\n\t</div>\n\t<div id="fieldDisplayNonEditable" style="display:none">\n\t\tField Type: <span data-rv-text="model.' +
-((__t = ( Formbuilder.options.mappings.FIELD_TYPE )) == null ? '' : __t) +
-'"></span>\n\t</div>\n</div>\n';
+__p += '\n\t</select>\n</div>\n';
 
 }
 return __p
@@ -1500,18 +1428,11 @@ return __p
 
 this["Formbuilder"]["templates"]["edit/defaultVal"] = function(obj) {
 obj || (obj = {});
-var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
-function print() { __p += __j.call(arguments, '') }
+var __t, __p = '', __e = _.escape;
 with (obj) {
-__p += '<!-- <div data-rv-show="model.' +
+__p += '<div class=\'fb-edit-section-header\'>Default Value</div>\n  <div class=\'fb-default_value-description\'>\n\t\t<input type=\'text\' data-rv-input=\'model.' +
 ((__t = ( Formbuilder.options.mappings.DEFAULT_VALUE )) == null ? '' : __t) +
-' == \'tom\'"> -->\n<div data-rv-show="model.displayDefaultValueUI">\n\t\t';
- /* ;
-__p += '\n\t\t<P>debugger 4: [<span data-rv-text=\'model.default_value\'></span>]\n\t\t<P>debugger 5: [<span data-rv-text=\'model.displayDefaultValueUI\'></span>]\n\t\t';
- */ ;
-__p += '\n<div class=\'fb-edit-section-header\'>Default Value</div>\n  <div class=\'fb-default_value-description\'>\n\t\t<textarea data-rv-input=\'model.' +
-((__t = ( Formbuilder.options.mappings.DEFAULT_VALUE )) == null ? '' : __t) +
-'\' /></textarea>\n  </div>\n</div>\n';
+'\' />\n  </div>\n\n';
 
 }
 return __p
@@ -1533,13 +1454,11 @@ this["Formbuilder"]["templates"]["edit/label_description"] = function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p += '<input placeholder=\'' +
-((__t = ( Formbuilder.options.dict.EMPTY_LABEL_WARNING )) == null ? '' : __t) +
-'\' type=\'text\' data-rv-input=\'model.' +
+__p += '<input type=\'text\' data-rv-input=\'model.' +
 ((__t = ( Formbuilder.options.mappings.LABEL )) == null ? '' : __t) +
 '\' />\n<!-- <textarea data-rv-input=\'model.' +
 ((__t = ( Formbuilder.options.mappings.DESCRIPTION )) == null ? '' : __t) +
-'\'\n  placeholder=\'Add a longer description to this field\'></textarea> -->\n';
+'\'\n  placeholder=\'Add a longer description to this field\'></textarea> -->';
 
 }
 return __p
@@ -1588,9 +1507,7 @@ __p += '\n  <label>\n    <input type=\'checkbox\' data-rv-checked=\'model.' +
  } ;
 __p += '\n\n<div class=\'sortableParentContainer\'>\n\t<div class=\'option sortableElement\' data-rv-each-option=\'model.' +
 ((__t = ( Formbuilder.options.mappings.OPTIONS )) == null ? '' : __t) +
-'\'>\n\t  <input type="checkbox" class=\'js-default-updated\' data-rv-checked="option:checked" />\n\t  <input placeholder=\'' +
-((__t = ( Formbuilder.options.dict.EMPTY_OPTION_WARNING )) == null ? '' : __t) +
-'\' type="text" data-rv-input="option:label" class=\'option-label-input\' />\n\t  <a class="js-add-option ' +
+'\'>\n\t  <input type="checkbox" class=\'js-default-updated\' data-rv-checked="option:checked" />\n\t  <input type="text" data-rv-input="option:label" class=\'option-label-input\' />\n\t  <a class="js-add-option ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
 '" title="Add Option"><i class=\'fa fa-plus-circle\'></i></a>\n\t  <a class="js-remove-option ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
@@ -1697,7 +1614,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n\t\t\t// fb.isFormReadyToSave();\n\n    }\n    </script>\n\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n  </div>\n';
+'\n  </div>\n\n  <script language="Javascript">\n\tfunction debugMe() {\n\t\t// next line hooks up debug button for reason integration\n\t\t// var fb = window.formbuilderInstance;\n\n\t\tconsole.log("----------------- MODEL START --------------------");\n\t\tfor (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n\t\t\tvar currModel = fb.mainView.collection.models[i];\n\t\t\tconsole.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n\t\t}\n\t\tconsole.log("----------------- MODEL END --------------------");\n\t\t// fb.saveForm()\n\n\t}\n  </script>\n\n\t<p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n</div>\n';
 
 }
 return __p
@@ -1807,9 +1724,9 @@ obj || (obj = {});
 var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
 function print() { __p += __j.call(arguments, '') }
 with (obj) {
-__p += '<label>\n\t<span>' +
-((__t = ( Formbuilder.helpers.warnIfEmpty(Formbuilder.helpers.simple_format(rf.get(Formbuilder.options.mappings.LABEL)), Formbuilder.options.dict.EMPTY_LABEL_WARNING) )) == null ? '' : __t) +
-'</span>\n  ';
+__p += '<label>\n  <span>' +
+((__t = ( Formbuilder.helpers.simple_format(rf.get(Formbuilder.options.mappings.LABEL)) )) == null ? '' : __t) +
+'\n  ';
  if (rf.get(Formbuilder.options.mappings.REQUIRED)) { ;
 __p += '\n    <abbr title=\'required\'>*</abbr>\n  ';
  } ;

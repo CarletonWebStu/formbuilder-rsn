@@ -10,9 +10,13 @@ Formbuilder.registerField 'checkboxes',
       <div>
         <label class='fb-option'>
           <input type='checkbox' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick="javascript: return false;" />
-          <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].label %>
+          <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>
         </label>
       </div>
+    <% } %>
+
+    <% if (optionsForLooping.length == 0) { %>
+        <%= Formbuilder.helpers.warnIfEmpty("", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>
     <% } %>
 
     <% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>

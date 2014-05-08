@@ -1,5 +1,13 @@
-<div class='fb-field-label'>
-  <span data-rv-text="model.<%= Formbuilder.options.mappings.LABEL %>"></span>
-  <code class='field-type' data-rv-text='model.<%= Formbuilder.options.mappings.FIELD_TYPE %>'></code>
-  <span class='fa fa-arrow-right pull-right'></span>
+<div>
+	<div id="fieldDisplayEditable" style="display:none">
+		Field Type: 
+		<select id="fieldTypeSelector">
+			<% _(Formbuilder.getSupportedFields()).each(function(fieldName) { %>
+			<option value="<%=fieldName%>"><%= fieldName %></option>
+			<% }); %>
+		</select>
+	</div>
+	<div id="fieldDisplayNonEditable" style="display:none">
+		Field Type: <span data-rv-text="model.<%= Formbuilder.options.mappings.FIELD_TYPE %>"></span>
+	</div>
 </div>
