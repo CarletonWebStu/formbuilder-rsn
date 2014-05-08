@@ -1,3 +1,5 @@
+localPrettyName = "Checkboxes"
+
 Formbuilder.registerField 'checkboxes',
 
   order: 10
@@ -39,9 +41,8 @@ Formbuilder.registerField 'checkboxes',
     <%= Formbuilder.templates['edit/options']({ includeOther: true }) %>
   """###
 
-  addButton: """
-    <span class="symbol"><span class="fa fa-check-square-o"></span></span> Checkboxes
-  """
+  prettyName: localPrettyName
+  addButton: "<span class=\"symbol\"><span class=\"fa fa-check-square-o\"></span></span> " + localPrettyName
 
   defaultAttributes: (attrs) ->
     _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray())

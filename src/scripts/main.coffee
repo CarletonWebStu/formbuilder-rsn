@@ -183,7 +183,10 @@ class EditFieldView extends Backbone.View
     if (warning == "")
       @changeEditingFieldType(fromType, toType)
     else
-      warning = "Warning - by changing this field from \"" + fromType + "\" to \"" + toType + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!"
+      prettyFrom = if Formbuilder.fields[fromType].prettyName then Formbuilder.fields[fromType].prettyName else fromType
+      prettyTo = if Formbuilder.fields[toType].prettyName then Formbuilder.fields[toType].prettyName else toType
+
+      warning = "Warning - by changing this field from \"" + prettyFrom + "\" to \"" + prettyTo + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!"
 
       if (confirm(warning))
         @changeEditingFieldType(fromType, toType)
@@ -785,10 +788,23 @@ class Formbuilder
     $.extend(true, merged, @inputFields, @nonInputFields)
 
     rv = _(merged).map((obj, key) =>
-      key
+      { type:obj.type, sorter:obj.order, value: key, display: if obj.prettyName then obj.prettyName else key }
       )
 
-    rv.sort()
+    nonInput = "non_input"
+    # rv.sort()
+    rv.sort (a,b) ->
+      if (a.type == nonInput and b.type != nonInput)
+        return 1
+      else if (a.type != nonInput and b.type == nonInput)
+        return -1
+      
+      if (a.sorter > b.sorter)
+        return 1
+      else if (a.sorter < b.sorter)
+        return -1
+      else
+        return 0
 
     # rv = ["checkboxes","text"]
     # rv = @inputFields

@@ -1,3 +1,4 @@
+localPrettyName = "Hidden Field"
 Formbuilder.registerField 'hidden_field',
 
   order: 10
@@ -19,9 +20,8 @@ Formbuilder.registerField 'hidden_field',
     </div>
   """
 
-  addButton: """
-    <span class='symbol'><span class='fa fa-code'></span></span> Hidden Field
-  """
+  prettyName: localPrettyName
+  addButton: "<span class='symbol'><span class='fa fa-code'></span></span> " + localPrettyName
 
   defaultAttributes: (attrs) ->
     _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Hidden Field')

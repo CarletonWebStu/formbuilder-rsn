@@ -1,3 +1,5 @@
+localPrettyName = "Dropdown"
+
 Formbuilder.registerField 'dropdown',
 
   order: 24
@@ -31,9 +33,8 @@ Formbuilder.registerField 'dropdown',
     <%= Formbuilder.templates['edit/options']({ includeBlank: true }) %>
   """###
 
-  addButton: """
-    <span class="symbol"><span class="fa fa-caret-down"></span></span> Dropdown
-  """
+  prettyName: localPrettyName
+  addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> " + localPrettyName
 
   defaultAttributes: (attrs) ->
     _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray())

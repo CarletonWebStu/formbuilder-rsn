@@ -1,3 +1,5 @@
+localPrettyName = "Multiline Text"
+
 Formbuilder.registerField 'paragraph',
 
   order: 5
@@ -15,9 +17,13 @@ Formbuilder.registerField 'paragraph',
     <%= Formbuilder.templates['edit/min_max_length']() %>
   """###
 
+  ###
   addButton: """
     <span class="symbol">&#182;</span> Paragraph
   """
+  ###
+  prettyName: localPrettyName
+  addButton: "<span class=\"symbol\">&#182;</span> " + localPrettyName
 
   # defaultAttributes: (attrs) ->
   #   _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')

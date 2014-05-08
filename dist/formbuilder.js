@@ -314,7 +314,7 @@
     };
 
     EditFieldView.prototype.changeEditingFieldTypeWithDataLossWarning = function(fromType, toType) {
-      var inputData, multiFields, numCheckedOptions, numOptions, o, warning, _i, _len, _ref6;
+      var inputData, multiFields, numCheckedOptions, numOptions, o, prettyFrom, prettyTo, warning, _i, _len, _ref6;
       if (fromType === toType) {
         return;
       }
@@ -364,7 +364,9 @@
       if (warning === "") {
         return this.changeEditingFieldType(fromType, toType);
       } else {
-        warning = "Warning - by changing this field from \"" + fromType + "\" to \"" + toType + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!";
+        prettyFrom = Formbuilder.fields[fromType].prettyName ? Formbuilder.fields[fromType].prettyName : fromType;
+        prettyTo = Formbuilder.fields[toType].prettyName ? Formbuilder.fields[toType].prettyName : toType;
+        warning = "Warning - by changing this field from \"" + prettyFrom + "\" to \"" + prettyTo + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!";
         if (confirm(warning)) {
           return this.changeEditingFieldType(fromType, toType);
         } else {
@@ -1038,14 +1040,33 @@
     Formbuilder.prototype.debug = {};
 
     Formbuilder.getSupportedFields = function() {
-      var merged, rv,
+      var merged, nonInput, rv,
         _this = this;
       merged = {};
       $.extend(true, merged, this.inputFields, this.nonInputFields);
       rv = _(merged).map(function(obj, key) {
-        return key;
+        return {
+          type: obj.type,
+          sorter: obj.order,
+          value: key,
+          display: obj.prettyName ? obj.prettyName : key
+        };
       });
-      rv.sort();
+      nonInput = "non_input";
+      rv.sort(function(a, b) {
+        if (a.type === nonInput && b.type !== nonInput) {
+          return 1;
+        } else if (a.type !== nonInput && b.type === nonInput) {
+          return -1;
+        }
+        if (a.sorter > b.sorter) {
+          return 1;
+        } else if (a.sorter < b.sorter) {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
       return rv;
     };
 
@@ -1201,6 +1222,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Checkboxes";
+
   Formbuilder.registerField('checkboxes', {
     order: 10,
     view: "<%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='checkbox' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </label>\n  </div>\n<% } %>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='checkbox' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
@@ -1210,7 +1235,8 @@
     """
     */
 
-    addButton: "<span class=\"symbol\"><span class=\"fa fa-check-square-o\"></span></span> Checkboxes",
+    prettyName: localPrettyName,
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-check-square-o\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       return attrs;
@@ -1230,6 +1256,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Dropdown";
+
   Formbuilder.registerField('dropdown', {
     order: 24,
     view: "<select>\n  <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>\n    <option value=''></option>\n  <% } %>\n\n  <%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n  %>\n    <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </option>\n  <% } %>\n</select>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>",
@@ -1239,7 +1269,8 @@
     """
     */
 
-    addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> Dropdown",
+    prettyName: localPrettyName,
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       _.pathAssign(attrs, Formbuilder.options.mappings.INCLUDE_BLANK, false);
@@ -1270,12 +1301,17 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Hidden Field";
+
   Formbuilder.registerField('hidden_field', {
     order: 10,
     type: 'non_input',
     view: "<label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>\n<pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>",
     edit: "<div class='fb-label-description'>\n  <div class='fb-edit-section-header'>Label</div>\n  <input type='text' data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>' />\n  <div class='fb-edit-section-header'>Data</div>\n  <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n    placeholder='Add some data to this hidden field'></textarea>\n</div>",
-    addButton: "<span class='symbol'><span class='fa fa-code'></span></span> Hidden Field",
+    prettyName: localPrettyName,
+    addButton: "<span class='symbol'><span class='fa fa-code'></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Hidden Field');
       return attrs;
@@ -1295,6 +1331,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Multiline Text";
+
   Formbuilder.registerField('paragraph', {
     order: 5,
     view: "<textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>",
@@ -1305,7 +1345,14 @@
     """
     */
 
-    addButton: "<span class=\"symbol\">&#182;</span> Paragraph"
+    /*
+    addButton: """
+      <span class="symbol">&#182;</span> Paragraph
+    """
+    */
+
+    prettyName: localPrettyName,
+    addButton: "<span class=\"symbol\">&#182;</span> " + localPrettyName
   });
 
 }).call(this);
@@ -1321,6 +1368,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Radio Buttons";
+
   Formbuilder.registerField('radio', {
     order: 15,
     view: "<%\n  var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n  for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='radio' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </label>\n  </div>\n<% } %>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='radio' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
@@ -1330,7 +1381,8 @@
     """
     */
 
-    addButton: "<span class=\"symbol\"><span class=\"fa fa-circle-o\"></span></span> Radio Buttons",
+    prettyName: localPrettyName,
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-circle-o\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       return attrs;
@@ -1366,6 +1418,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Single Line Text";
+
   Formbuilder.registerField('text', {
     order: 0,
     view: "<input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'/>",
@@ -1376,18 +1432,24 @@
     """
     */
 
-    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> Text"
+    prettyName: localPrettyName,
+    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
   });
 
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Text Comment";
+
   Formbuilder.registerField('text_comment', {
     order: 20,
     type: 'non_input',
     view: "<label class=\"preview-only\">Text Comment</label>\n<p><%= rf.get(Formbuilder.options.mappings.DESCRIPTION) %></p>",
     edit: "<div class='fb-label-description'>\n  <div class='fb-edit-section-header'>Text</div>\n  <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n    placeholder='Add some text'></textarea>\n</div>",
-    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> Text Comment",
+    prettyName: localPrettyName,
+    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Text Comment');
       return attrs;
@@ -1441,11 +1503,11 @@ var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
 function print() { __p += __j.call(arguments, '') }
 with (obj) {
 __p += '<div>\n\t<div id="fieldDisplayEditable" style="display:none">\n\t\tField Type: \n\t\t<select id="fieldTypeSelector">\n\t\t\t';
- _(Formbuilder.getSupportedFields()).each(function(fieldName) { ;
+ _(Formbuilder.getSupportedFields()).each(function(field) { ;
 __p += '\n\t\t\t<option value="' +
-((__t = (fieldName)) == null ? '' : __t) +
+((__t = (field.value)) == null ? '' : __t) +
 '">' +
-((__t = ( fieldName )) == null ? '' : __t) +
+((__t = ( field.display )) == null ? '' : __t) +
 '</option>\n\t\t\t';
  }); ;
 __p += '\n\t\t</select>\n\t</div>\n\t<div id="fieldDisplayNonEditable" style="display:none">\n\t\tField Type: <span data-rv-text="model.' +
@@ -1636,13 +1698,13 @@ this["Formbuilder"]["templates"]["page"] = function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p +=
+__p += '<div class="fb-wrap">\n' +
 ((__t = ( Formbuilder.templates['partials/op_buttons']() )) == null ? '' : __t) +
 '\n' +
 ((__t = ( Formbuilder.templates['partials/left_side']() )) == null ? '' : __t) +
 '\n' +
 ((__t = ( Formbuilder.templates['partials/right_side']() )) == null ? '' : __t) +
-'\n<div class=\'fb-clear\'></div>';
+'\n<div class=\'fb-clear\'></div>\n</div>';
 
 }
 return __p
@@ -1697,7 +1759,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n\t\t\t// fb.isFormReadyToSave();\n\n    }\n    </script>\n\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n  </div>\n';
+'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n                       // fb.isFormReadyToSave();\n\n    }\n    </script>\n\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n\n</div>\n';
 
 }
 return __p

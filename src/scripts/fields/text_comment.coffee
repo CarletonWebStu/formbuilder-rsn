@@ -1,3 +1,4 @@
+localPrettyName = "Text Comment"
 Formbuilder.registerField 'text_comment',
 
   order: 20
@@ -17,9 +18,8 @@ Formbuilder.registerField 'text_comment',
     </div>
   """
 
-  addButton: """
-    <span class='symbol'><span class='fa fa-font'></span></span> Text Comment
-  """
+  prettyName: localPrettyName
+  addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
 
   defaultAttributes: (attrs) ->
     _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Text Comment')

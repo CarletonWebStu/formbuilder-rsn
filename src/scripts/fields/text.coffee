@@ -1,3 +1,4 @@
+localPrettyName = "Single Line Text"
 Formbuilder.registerField 'text',
 
   order: 0
@@ -14,9 +15,8 @@ Formbuilder.registerField 'text',
     <%= Formbuilder.templates['edit/min_max_length']() %>
   """###
 
-  addButton: """
-    <span class='symbol'><span class='fa fa-font'></span></span> Text
-  """
+  prettyName: localPrettyName
+  addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
 
   # defaultAttributes: (attrs) ->
   #   _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')
