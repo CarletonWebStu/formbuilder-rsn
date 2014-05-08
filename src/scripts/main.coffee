@@ -84,8 +84,7 @@ class EditFieldView extends Backbone.View
 
   render: ->
     # special case - only show the "default value" UI if user has previously put data in for it
-    storedDefaultVal = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
-    dvalIsEmpty = storedDefaultVal == null || storedDefaultVal == undefined || emptyOrWhitespaceRegex.test(storedDefaultVal)
+    dvalIsEmpty = Formbuilder.helpers.fieldIsEmptyOrNull(@model.get(Formbuilder.options.mappings.DEFAULT_VALUE))
     # stuff a val into the model so that rivets can render appropriately
     @model.attributes.displayDefaultValueUI = (not dvalIsEmpty)
 
@@ -125,6 +124,12 @@ class EditFieldView extends Backbone.View
         $("#fieldDisplayNonEditable").css("display", "block")
         $("#fieldDisplayEditable").remove()
 
+    ), 10)
+
+    # and another one - focus the "Label" field if it's empty
+    setTimeout((=>
+      if (Formbuilder.helpers.fieldIsEmptyOrNull(@model.get(Formbuilder.options.mappings.LABEL)))
+        $(".fb-label-description input").focus()
     ), 10)
 
     return @
@@ -721,8 +726,11 @@ class Formbuilder
     simple_format: (x) ->
       x?.replace(/\n/g, '<br />')
 
+    fieldIsEmptyOrNull: (s) ->
+      s == null || s == undefined || emptyOrWhitespaceRegex.test(s)
+
     warnIfEmpty: (s, warning) ->
-      if (s == null || s == undefined || emptyOrWhitespaceRegex.test(s))
+      if (Formbuilder.helpers.fieldIsEmptyOrNull(s))
         return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>"
       s
 

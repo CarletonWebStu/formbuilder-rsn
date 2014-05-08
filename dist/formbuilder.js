@@ -256,10 +256,9 @@
     };
 
     EditFieldView.prototype.render = function() {
-      var allowTypeChange, dvalIsEmpty, storedDefaultVal, _ref6,
+      var allowTypeChange, dvalIsEmpty, _ref6,
         _this = this;
-      storedDefaultVal = this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE);
-      dvalIsEmpty = storedDefaultVal === null || storedDefaultVal === void 0 || emptyOrWhitespaceRegex.test(storedDefaultVal);
+      dvalIsEmpty = Formbuilder.helpers.fieldIsEmptyOrNull(this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE));
       this.model.attributes.displayDefaultValueUI = !dvalIsEmpty;
       this.$el.html(Formbuilder.templates["edit/base" + (!this.model.is_input() ? '_non_input' : '')]({
         rf: this.model
@@ -299,6 +298,14 @@
         } else {
           $("#fieldDisplayNonEditable").css("display", "block");
           return $("#fieldDisplayEditable").remove();
+        }
+      }), 10);
+      setTimeout((function() {
+        if (Formbuilder.helpers.fieldIsEmptyOrNull(_this.model.get(Formbuilder.options.mappings.LABEL))) {
+          console.log("EMPTY LABEL - focus the label field?");
+          return $(".fb-label-description input").focus();
+        } else {
+          return console.log("leave it alone...");
         }
       }), 10);
       return this;
@@ -976,8 +983,11 @@
       simple_format: function(x) {
         return x != null ? x.replace(/\n/g, '<br />') : void 0;
       },
+      fieldIsEmptyOrNull: function(s) {
+        return s === null || s === void 0 || emptyOrWhitespaceRegex.test(s);
+      },
       warnIfEmpty: function(s, warning) {
-        if (s === null || s === void 0 || emptyOrWhitespaceRegex.test(s)) {
+        if (Formbuilder.helpers.fieldIsEmptyOrNull(s)) {
           return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>";
         }
         return s;
