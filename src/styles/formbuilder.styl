@@ -4,8 +4,11 @@ $sec-color = #16a085
 $affirmitive-color = #2ecc71
 $negative-color = #e74c3c
 
-$editing-bg = #ecf0f1
-$editing-border = darken($editing-bg, 7%)
+$field-bg = #f0f4f5
+$field-border = darken($field-bg, 7%)
+
+$editing-bg = #fff9c9
+$editing-border = darken(desaturate($editing-bg, 15%), 15%)
 
 .fb-wrap, .fb-wrap * {
 	-moz-box-sizing: border-box;
@@ -82,7 +85,7 @@ $editing-border = darken($editing-bg, 7%)
 
 .fb-tabs {
   list-style: none;
-  margin: 0 0 20px 0;
+  margin:0;
   padding: 0 0 0 20px;
   border-bottom: 1px solid #ccc;
 }
@@ -106,9 +109,13 @@ $editing-border = darken($editing-bg, 7%)
   margin-bottom: -1px;
   border-bottom-color: #fff;
 }
+.fb-tabs li.active a[data-target="#editField"] {
+	background-color: $editing-bg;
+  border-bottom-color: $editing-bg;
+}
 
 .fb-tab-content .fb-tab-pane {
-  padding: 0 20px;
+  padding: 20px;
   display: none;
 }
 
@@ -145,6 +152,10 @@ $editing-border = darken($editing-bg, 7%)
   }
 }
 
+#editField {
+	background-color: $editing-bg;
+}
+
 .fb-response-fields {
   min-height:100px;
   position: relative;
@@ -152,7 +163,7 @@ $editing-border = darken($editing-bg, 7%)
 
 .fb-response-fields a.sortable-placeholder {
   display: block;
-  border: 1px dashed #ddd;
+  border: 1px dashed darken($field-bg, 33%);
   min-height: 80px;
   height: 80px;
   width: 100%;
@@ -164,7 +175,7 @@ $editing-border = darken($editing-bg, 7%)
   cursor: pointer;
   position: relative;
   margin-bottom: 20px;
-  background-color: RGBA(255,255,255,.8);
+  background-color: $field-bg;
 
   input {
     border-radius: 3px;
@@ -183,7 +194,7 @@ $editing-border = darken($editing-bg, 7%)
 }
 
 .fb-field-wrapper:hover .subtemplate-wrapper {
-  border-color: #ddd;
+  border-color: darken($field-bg, 33%);
   border-radius: 3px;
 }
 
@@ -279,9 +290,13 @@ $editing-border = darken($editing-bg, 7%)
 
 .fb-field-wrapper .subtemplate-wrapper > label {
   display: block;
-  border-bottom: thin solid #eee;
+  border-bottom: thin solid $field-border;
   padding-bottom: 3px;
   margin-bottom: 7px;
+}
+
+.fb-field-wrapper.editing .subtemplate-wrapper > label {
+  border-color: $editing-border;
 }
 
 .fb-field-wrapper .subtemplate-wrapper label.preview-only {
@@ -383,7 +398,7 @@ $editing-border = darken($editing-bg, 7%)
 }
 
 .response-field-draggable-helper {
-  border: 1px dashed #ddd;
+  border: 1px dashed darken($field-bg, 33%);
   background: #eee;
 }
 
