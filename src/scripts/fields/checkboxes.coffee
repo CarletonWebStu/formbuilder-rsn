@@ -41,6 +41,17 @@ Formbuilder.registerField 'checkboxes',
     <%= Formbuilder.templates['edit/options']({ includeOther: true }) %>
   """###
 
+  instructionDetails: """
+    <div class="instructionText">Used when you want the user to select any number of options from a pre-populated list.</div>
+    <div class="instructionExample">What sports do you enjoy?<br>
+      <input type="checkbox"> Basketball<br>
+      <input type="checkbox"> Football<br>
+      <input type="checkbox"> Soccer<br>
+      <input type="checkbox"> Ultimate Frisbee<br>
+      <input type="checkbox"> Volleyball<br>
+    </div>
+  """
+
   prettyName: localPrettyName
   addButton: "<span class=\"symbol\"><span class=\"fa fa-check-square-o\"></span></span> " + localPrettyName
 

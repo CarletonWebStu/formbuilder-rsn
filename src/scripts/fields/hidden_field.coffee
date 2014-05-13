@@ -21,6 +21,11 @@ Formbuilder.registerField 'hidden_field',
     </div>
   """
 
+  instructionDetails: """
+    <div class="instructionText">Used to pass data through the form without displaying it to the user.</div>
+  """
+
+
   prettyName: localPrettyName
   addButton: "<span class='symbol'><span class='fa fa-code'></span></span> " + localPrettyName
 

@@ -1,11 +1,33 @@
 <div class='fb-left'>
   <ul class='fb-tabs'>
-    <li class='active'><a data-target='#addField'>Add new field</a></li>
-    <li><a data-target='#editField'>Edit field</a></li>
+    <li class='active'><a data-target='#addField'><i class='fa fa-plus-circle'></i> Add new field</a></li>
+    <li><a data-target='#editField'><i class='fa fa-edit'></i> Edit field</a></li>
   </ul>
 
   <div class='fb-tab-content'>
     <%= Formbuilder.templates['partials/add_field']() %>
     <%= Formbuilder.templates['partials/edit_field']() %>
   </div>
+
+    <script language="Javascript">
+    function debugMe() {
+      // next line hooks up debug button for reason integration
+      // var fb = window.formbuilderInstance;
+
+      console.log("----------------- MODEL START --------------------");
+      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {
+        var currModel = fb.mainView.collection.models[i];
+        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");
+      }
+      console.log("----------------- MODEL END --------------------");
+      // fb.saveForm()
+                       // fb.isFormReadyToSave();
+
+    }
+    </script>
+
+		<!--
+    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">
+		-->
+
 </div>

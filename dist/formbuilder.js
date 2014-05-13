@@ -596,7 +596,9 @@
       'click .js-save-form': 'saveForm',
       'click .fb-tabs a': 'showTab',
       'click .fb-add-field-types a': 'addField',
-      'click .fb-edit-finished a': 'showTabAddField'
+      'click .fb-edit-finished a': 'showTabAddField',
+      'mouseenter .fb-add-field-types a': 'showFieldInstructions',
+      'mouseleave .fb-add-field-types a': 'clearFieldInstructions'
     };
 
     BuilderView.prototype.captureDelete = function(evt) {
@@ -849,6 +851,18 @@
     BuilderView.prototype.hideShowNoResponseFields = function() {
       var _ref7;
       return this.$el.find(".fb-no-response-fields")[(this.collection.length === 1 && Formbuilder.options.FORCE_BOTTOM_SUBMIT && ((_ref7 = this.collection.models[0]) != null ? _ref7.is_last_submit() : void 0)) || this.collection.length === 0 ? 'show' : 'hide']();
+    };
+
+    BuilderView.prototype.clearFieldInstructions = function(e) {
+      return $(".fb-field-instructions").text("");
+    };
+
+    BuilderView.prototype.showFieldInstructions = function(e) {
+      var fieldType, instructions;
+      return;
+      fieldType = $(e.currentTarget).data('field-type');
+      instructions = Formbuilder.fields[fieldType].instructionDetails ? Formbuilder.fields[fieldType].instructionDetails : "";
+      return $(".fb-field-instructions").html(instructions);
     };
 
     BuilderView.prototype.addField = function(e) {
@@ -1301,6 +1315,7 @@
     """
     */
 
+    instructionDetails: "<div class=\"instructionText\">Used when you want the user to select any number of options from a pre-populated list.</div>\n<div class=\"instructionExample\">What sports do you enjoy?<br>\n  <input type=\"checkbox\"> Basketball<br>\n  <input type=\"checkbox\"> Football<br>\n  <input type=\"checkbox\"> Soccer<br>\n  <input type=\"checkbox\"> Ultimate Frisbee<br>\n  <input type=\"checkbox\"> Volleyball<br>\n</div>",
     prettyName: localPrettyName,
     addButton: "<span class=\"symbol\"><span class=\"fa fa-check-square-o\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
@@ -1335,6 +1350,7 @@
     """
     */
 
+    instructionDetails: "<div class=\"instructionText\">Used when you want the user to select one (and only one) option from a pre-populated list.</div>\n<div class=\"instructionExample\">What is your major? <select><option>Biology</option></select></div>",
     prettyName: localPrettyName,
     addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
@@ -1376,6 +1392,7 @@
     type: 'non_input',
     view: "<label class=\"preview-only\">" + localPrettyName + "</label>\n<label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>\n<pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>",
     edit: "<div class='fb-label-description'>\n  <div class='fb-edit-section-header'>Label</div>\n  <input type='text' data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>' />\n  <div class='fb-edit-section-header'>Data</div>\n  <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n    placeholder='Add some data to this hidden field'></textarea>\n</div>",
+    instructionDetails: "<div class=\"instructionText\">Used to pass data through the form without displaying it to the user.</div>",
     prettyName: localPrettyName,
     addButton: "<span class='symbol'><span class='fa fa-code'></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
@@ -1417,6 +1434,7 @@
     """
     */
 
+    instructionDetails: "<div class=\"instructionText\">Used to gather longer amounts of free-form text input from a user.</div>\n<div class=\"instructionExample\">Explain why you are the best candidate for this position:\n  <br>\n  <textarea rows=5 cols=30></textarea>\n</div>",
     prettyName: localPrettyName,
     addButton: "<span class=\"symbol\">&#182;</span> " + localPrettyName
   });
@@ -1447,6 +1465,7 @@
     """
     */
 
+    instructionDetails: "<div class=\"instructionText\">Used when you want the user to select one (and only one) option from a pre-populated list.</div>\n<div class=\"instructionExample\">Do you have a driver's license?<br>\n  <input type=\"radio\"> Yes<br>\n  <input type=\"radio\"> No<br>\n</div>",
     prettyName: localPrettyName,
     addButton: "<span class=\"symbol\"><span class=\"fa fa-circle-o\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
@@ -1498,6 +1517,7 @@
     """
     */
 
+    instructionDetails: "<div class=\"instructionText\">Used to gather short amounts of free-form text input from a user.</div>\n<div class=\"instructionExample\">Name: <input type=\"text\"></div>",
     prettyName: localPrettyName,
     addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
   });
@@ -1514,6 +1534,7 @@
     type: 'non_input',
     view: "<label class=\"preview-only\">Text Comment</label>\n<p><%= rf.get(Formbuilder.options.mappings.DESCRIPTION) %></p>",
     edit: "<div class='fb-label-description'>\n  <div class='fb-edit-section-header'>Text</div>\n  <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n    placeholder='Add some text'></textarea>\n</div>",
+    instructionDetails: "<div class=\"instructionText\">Used to display text to the user without requiring any input.</div>\n<div class=\"instructionExample\">Please submit the following information by May 15. The selection committee will select an applicant by the end of June.</div>",
     prettyName: localPrettyName,
     addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
@@ -1801,7 +1822,7 @@ __p += '\n        <a data-field-type="' +
 ((__t = ( f.addButton )) == null ? '' : __t) +
 '\n        </a>\n      ';
  }); ;
-__p += '\n    </div>\n  </div>\n</div>';
+__p += '\n    </div>\n  </div>\n\n  <div class=\'fb-field-instructions\'></div>\n</div>\n';
 
 }
 return __p

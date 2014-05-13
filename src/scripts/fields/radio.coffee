@@ -40,6 +40,14 @@ Formbuilder.registerField 'radio',
     <%= Formbuilder.templates['edit/options']({ includeOther: true }) %>
   """###
 
+  instructionDetails: """
+    <div class="instructionText">Used when you want the user to select one (and only one) option from a pre-populated list.</div>
+    <div class="instructionExample">Do you have a driver's license?<br>
+      <input type="radio"> Yes<br>
+      <input type="radio"> No<br>
+    </div>
+  """
+
   prettyName: localPrettyName
   addButton: "<span class=\"symbol\"><span class=\"fa fa-circle-o\"></span></span> " + localPrettyName
 

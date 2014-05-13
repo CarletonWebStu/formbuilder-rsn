@@ -22,6 +22,15 @@ Formbuilder.registerField 'paragraph',
     <span class="symbol">&#182;</span> Paragraph
   """
   ###
+
+  instructionDetails: """
+    <div class="instructionText">Used to gather longer amounts of free-form text input from a user.</div>
+    <div class="instructionExample">Explain why you are the best candidate for this position:
+      <br>
+      <textarea rows=5 cols=30></textarea>
+    </div>
+  """
+
   prettyName: localPrettyName
   addButton: "<span class=\"symbol\">&#182;</span> " + localPrettyName
 

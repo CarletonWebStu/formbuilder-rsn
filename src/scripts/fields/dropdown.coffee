@@ -33,6 +33,11 @@ Formbuilder.registerField 'dropdown',
     <%= Formbuilder.templates['edit/options']({ includeBlank: true }) %>
   """###
 
+  instructionDetails: """
+    <div class="instructionText">Used when you want the user to select one (and only one) option from a pre-populated list.</div>
+    <div class="instructionExample">What is your major? <select><option>Biology</option></select></div>
+  """
+
   prettyName: localPrettyName
   addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> " + localPrettyName
 

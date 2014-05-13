@@ -18,6 +18,12 @@ Formbuilder.registerField 'text_comment',
     </div>
   """
 
+  instructionDetails: """
+    <div class="instructionText">Used to display text to the user without requiring any input.</div>
+    <div class="instructionExample">Please submit the following information by May 15. The selection committee will select an applicant by the end of June.</div>
+  """
+
+
   prettyName: localPrettyName
   addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
 
