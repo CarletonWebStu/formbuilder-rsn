@@ -1,4 +1,7 @@
 emptyOrWhitespaceRegex = RegExp(/^\s*$/)
+DELETE_KEYCODE = 8
+ENTER_KEYCODE = 13
+
 
 class FormbuilderModel extends Backbone.DeepModel
   sync: -> # noop
@@ -77,6 +80,27 @@ class EditFieldView extends Backbone.View
     'click .js-remove-option': 'removeOption'
     'click .js-default-updated': 'defaultUpdated'
     'input .option-label-input': 'forceRender'
+    'keydown .option-label-input': 'handleSpecialKeysDuringOptionEditing'
+
+  handleSpecialKeysDuringOptionEditing: (evt) ->
+    if true and (evt.which == DELETE_KEYCODE or evt.keyCode == DELETE_KEYCODE)
+      currLabel = evt.currentTarget.value
+      if (currLabel == "")
+        deletionIndex = $(evt.currentTarget).parent().index()
+        @removeOptionAtIndex deletionIndex
+
+        # focus on another option
+        focusIndex = (if deletionIndex == 0 then 0 else deletionIndex - 1)
+        newFocusFields = $(".edit-response-field .sortableParentContainer .option .option-label-input")
+        if (newFocusFields.length > 0)
+          (newFocusFields[focusIndex]).focus()
+
+        return false
+    else if evt.which == ENTER_KEYCODE or evt.keyCode == ENTER_KEYCODE
+      @addOption evt
+
+    # console.log evt
+    # console.log this
 
   initialize: (options) ->
     {@parentView} = options
@@ -247,7 +271,12 @@ class EditFieldView extends Backbone.View
 
         translationData.options = _.clone(@model.get(Formbuilder.options.mappings.OPTIONS))
 
-    console.log "label set to [" + translationData.pseudoLabel + "]"
+
+      # when we switch to one of the multiple choice field types, let's add some default options
+      if (!translationData.options or translationData.options.length == 0)
+        translationData.options = Formbuilder.generateDefaultOptionsArray()
+
+    # console.log "label set to [" + translationData.pseudoLabel + "]"
 
     # we've extracted the relevant data; now let's update the model
     # delete stuff that may not exist on the destination type; it'll get re-created if necessary
@@ -329,11 +358,19 @@ class EditFieldView extends Backbone.View
 
     @model.set Formbuilder.options.mappings.OPTIONS, options
     @model.trigger "change:#{Formbuilder.options.mappings.OPTIONS}"
+
+    # let's focus on the newly added element...
+    targetSlot = 1 * (if i > -1 then i + 1 else options.length - 1)
+    ($(".edit-response-field .sortableParentContainer .option .option-label-input")[targetSlot]).focus()
+
     @forceRender()
 
   removeOption: (e) ->
     $el = $(e.currentTarget)
     index = @$el.find(".js-remove-option").index($el)
+    @removeOptionAtIndex(index)
+
+  removeOptionAtIndex: (index) ->
     options = @model.get Formbuilder.options.mappings.OPTIONS
     options.splice index, 1
     @model.set Formbuilder.options.mappings.OPTIONS, options
@@ -361,7 +398,17 @@ class BuilderView extends Backbone.View
     'click .fb-tabs a': 'showTab'
     'click .fb-add-field-types a': 'addField'
 
+  # unless the user is editing text, let's intercept delete keypresses. otherwise too easy to go back in the history
+  captureDelete: (evt) ->
+    if (evt.which == DELETE_KEYCODE or evt.keyCode == DELETE_KEYCODE)
+      if (evt.target and evt.target.type == "text")
+        return true
+      else
+        return false
+
   initialize: (options) ->
+    $(document).keydown(@captureDelete)
+
     {selector, @formBuilder, @bootstrapData} = options
 
     if (!(@bootstrapData instanceof Array))
