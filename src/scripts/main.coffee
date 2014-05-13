@@ -616,6 +616,8 @@ class BuilderView extends Backbone.View
 
     $addFieldButtons.draggable
       connectToSortable: @$responseFields
+      cursorAt: { left: @$responseFields.width()/2, top: 20 }
+      distance: 15
       helper: =>
         $helper = $("<div class='response-field-draggable-helper' />")
         $helper.css

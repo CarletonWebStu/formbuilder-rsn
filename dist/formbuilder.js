@@ -831,6 +831,11 @@
       $addFieldButtons = this.$el.find("[data-field-type]");
       return $addFieldButtons.draggable({
         connectToSortable: this.$responseFields,
+        cursorAt: {
+          left: this.$responseFields.width() / 2,
+          top: 20
+        },
+        distance: 15,
         helper: function() {
           var $helper;
           $helper = $("<div class='response-field-draggable-helper' />");
@@ -859,7 +864,6 @@
 
     BuilderView.prototype.showFieldInstructions = function(e) {
       var fieldType, instructions;
-      return;
       fieldType = $(e.currentTarget).data('field-type');
       instructions = Formbuilder.fields[fieldType].instructionDetails ? Formbuilder.fields[fieldType].instructionDetails : "";
       return $(".fb-field-instructions").html(instructions);
