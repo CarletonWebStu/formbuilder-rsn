@@ -192,7 +192,7 @@
     ViewFieldView.prototype.className = "fb-field-wrapper";
 
     ViewFieldView.prototype.events = {
-      'click .subtemplate-wrapper': 'focusEditView',
+      'click .subtemplate-wrapper .cover': 'focusEditView',
       'click .js-duplicate': 'duplicate',
       'click .js-clear': 'clear'
     };
@@ -302,10 +302,7 @@
       }), 10);
       setTimeout((function() {
         if (Formbuilder.helpers.fieldIsEmptyOrNull(_this.model.get(Formbuilder.options.mappings.LABEL))) {
-          console.log("EMPTY LABEL - focus the label field?");
           return $(".fb-label-description input").focus();
-        } else {
-          return console.log("leave it alone...");
         }
       }), 10);
       return this;
@@ -826,6 +823,7 @@
       });
       $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing');
       if (this.editView) {
+        console.log("in here");
         if (this.editView.model.cid === model.cid && !allowRepeatCreation) {
           this.$el.find(".fb-tabs a[data-target=\"#editField\"]").click();
           this.scrollLeftWrapper($responseFieldEl, (typeof oldPadding !== "undefined" && oldPadding !== null) && oldPadding);
@@ -1416,7 +1414,7 @@
   Formbuilder.registerField('submit_button', {
     order: 20,
     type: 'non_input',
-    view: "<button disabled><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
+    view: "<button><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
     edit: "<div class='fb-edit-section-header'>Button Label</div>\n<input type=\"text\" data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>'></input>",
     addButton: "<span class='symbol'><span class='fa fa-inbox'></span></span> Submit Button",
     defaultAttributes: function(attrs) {
@@ -1430,7 +1428,7 @@
 (function() {
   var localPrettyName;
 
-  localPrettyName = "Single Line Text";
+  localPrettyName = "Short Text";
 
   Formbuilder.registerField('text', {
     order: 0,
@@ -1866,9 +1864,9 @@ var __t, __p = '', __e = _.escape;
 with (obj) {
 __p += '<div class=\'actions-wrapper\'>\n  <a class="js-duplicate ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
-'" title="Duplicate Field"><i class=\'fa fa-plus-circle\'></i></a>\n  <a class="js-clear ' +
+'" title="Duplicate Field"><i class=\'fa fa-copy\'></i></a>\n  <a class="js-clear ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
-'" title="Remove Field"><i class=\'fa fa-minus-circle\'></i></a>\n</div>';
+'" title="Remove Field"><i class=\'fa fa-minus-circle\'></i></a>\n</div>\n';
 
 }
 return __p

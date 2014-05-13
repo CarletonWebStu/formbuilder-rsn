@@ -34,7 +34,7 @@ class ViewFieldView extends Backbone.View
   className: "fb-field-wrapper"
 
   events:
-    'click .subtemplate-wrapper': 'focusEditView'
+    'click .subtemplate-wrapper .cover': 'focusEditView'
     'click .js-duplicate': 'duplicate'
     'click .js-clear': 'clear'
 
@@ -598,6 +598,7 @@ class BuilderView extends Backbone.View
     $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing')
 
     if @editView
+      console.log "in here"
       if @editView.model.cid is model.cid and not allowRepeatCreation
         @$el.find(".fb-tabs a[data-target=\"#editField\"]").click()
         @scrollLeftWrapper $responseFieldEl, (oldPadding? && oldPadding)

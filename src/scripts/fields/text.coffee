@@ -1,4 +1,4 @@
-localPrettyName = "Single Line Text"
+localPrettyName = "Short Text"
 Formbuilder.registerField 'text',
 
   order: 0

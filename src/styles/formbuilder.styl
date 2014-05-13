@@ -3,6 +3,7 @@ $sec-color = #16a085
 
 $affirmitive-color = #2ecc71
 $negative-color = #e74c3c
+$ambivalent-color = #9a9c9c
 
 $editing-bg = #ecf0f1
 $editing-border = darken($editing-bg, 7%)
@@ -234,7 +235,11 @@ $editing-border = darken($editing-bg, 7%)
   }
 }
 
-.fb-field-wrapper .actions-wrapper a.js-duplicate,
+.fb-field-wrapper .actions-wrapper a.js-duplicate {
+  background-color: $ambivalent-color;
+  border: none;
+}
+
 .fb-edit-field-wrapper .js-add-option {
   background-color: $affirmitive-color;
   border: none;
