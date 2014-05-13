@@ -557,7 +557,6 @@
 
     EditFieldView.prototype.removeOptionAtIndex = function(index) {
       var options;
-      console.log("removing at [" + index + "]");
       options = this.model.get(Formbuilder.options.mappings.OPTIONS);
       options.splice(index, 1);
       this.model.set(Formbuilder.options.mappings.OPTIONS, options);
@@ -596,7 +595,8 @@
       'click .js-undo-delete': 'undoDelete',
       'click .js-save-form': 'saveForm',
       'click .fb-tabs a': 'showTab',
-      'click .fb-add-field-types a': 'addField'
+      'click .fb-add-field-types a': 'addField',
+      'click .fb-edit-finished a': 'showTabAdd'
     };
 
     BuilderView.prototype.captureDelete = function(evt) {
@@ -744,11 +744,20 @@
       }
     };
 
+    BuilderView.prototype.showTabAdd = function(e) {
+      return this.showTabForEl($(".fb-tabs li:eq(0) a"));
+    };
+
     BuilderView.prototype.showTab = function(e) {
-      var $el, first_model, target;
+      var $el;
       $el = $(e.currentTarget);
-      target = $el.data('target');
+      return this.showTabForEl($el);
+    };
+
+    BuilderView.prototype.showTabForEl = function($el) {
+      var first_model, target;
       $el.closest('li').addClass('active').siblings('li').removeClass('active');
+      target = $el.data('target');
       $(target).addClass('active').siblings('.fb-tab-pane').removeClass('active');
       if (target !== '#editField') {
         this.unlockLeftWrapper();
@@ -757,6 +766,20 @@
         return this.createAndShowEditView(first_model);
       }
     };
+
+    /*
+    showTab: (e) ->
+      $el = $(e.currentTarget)
+      target = $el.data('target')
+      $el.closest('li').addClass('active').siblings('li').removeClass('active')
+      $(target).addClass('active').siblings('.fb-tab-pane').removeClass('active')
+    
+      @unlockLeftWrapper() unless target == '#editField'
+    
+      if target == '#editField' && !@editView && (first_model = @collection.models[0])
+        @createAndShowEditView(first_model)
+    */
+
 
     BuilderView.prototype.addOne = function(responseField, _, options) {
       var $replacePosition, view;

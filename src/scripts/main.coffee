@@ -397,6 +397,7 @@ class BuilderView extends Backbone.View
     'click .js-save-form': 'saveForm'
     'click .fb-tabs a': 'showTab'
     'click .fb-add-field-types a': 'addField'
+    'click .fb-edit-finished a': 'showTabAddField'
 
   # unless the user is editing text, let's intercept delete keypresses. otherwise too easy to go back in the history
   captureDelete: (evt) ->
@@ -533,10 +534,20 @@ class BuilderView extends Backbone.View
       @$fbLeft.css
         'margin-top': proposedMargin
 
+  showTabAddField: (e) ->
+    @showTabForEl($(".fb-tabs li:eq(0) a"))
+
+  showTabEditField: (e) ->
+    @showTabForEl($(".fb-tabs li:eq(1) a"))
+
   showTab: (e) ->
     $el = $(e.currentTarget)
-    target = $el.data('target')
+    @showTabForEl($el)
+
+  showTabForEl: ($el) ->
+    # $el = $(e.currentTarget)
     $el.closest('li').addClass('active').siblings('li').removeClass('active')
+    target = $el.data('target')
     $(target).addClass('active').siblings('.fb-tab-pane').removeClass('active')
 
     @unlockLeftWrapper() unless target == '#editField'
