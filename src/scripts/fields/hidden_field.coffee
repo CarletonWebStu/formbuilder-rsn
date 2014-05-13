@@ -6,6 +6,7 @@ Formbuilder.registerField 'hidden_field',
   type: 'non_input'
 
   view: """
+    <label class="preview-only">#{localPrettyName}</label>
     <label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>
     <pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>
   """

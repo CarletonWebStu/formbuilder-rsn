@@ -5,6 +5,7 @@ Formbuilder.registerField 'submit_button',
   type: 'non_input'
 
   view: """
+    <label class="preview-only">Submit Button</label>
     <button><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>
   """
 

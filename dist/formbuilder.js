@@ -88,13 +88,17 @@
 }).call(this);
 
 (function() {
-  var BuilderView, DeletedFieldCollection, DeletedFieldModel, EditFieldView, Formbuilder, FormbuilderCollection, FormbuilderModel, ViewFieldView, emptyOrWhitespaceRegex, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
+  var BuilderView, DELETE_KEYCODE, DeletedFieldCollection, DeletedFieldModel, ENTER_KEYCODE, EditFieldView, Formbuilder, FormbuilderCollection, FormbuilderModel, ViewFieldView, emptyOrWhitespaceRegex, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   emptyOrWhitespaceRegex = RegExp(/^\s*$/);
+
+  DELETE_KEYCODE = 8;
+
+  ENTER_KEYCODE = 13;
 
   FormbuilderModel = (function(_super) {
     __extends(FormbuilderModel, _super);
@@ -247,7 +251,27 @@
       'click .js-add-option': 'addOption',
       'click .js-remove-option': 'removeOption',
       'click .js-default-updated': 'defaultUpdated',
-      'input .option-label-input': 'forceRender'
+      'input .option-label-input': 'forceRender',
+      'keydown .option-label-input': 'handleSpecialKeysDuringOptionEditing'
+    };
+
+    EditFieldView.prototype.handleSpecialKeysDuringOptionEditing = function(evt) {
+      var currLabel, deletionIndex, focusIndex, newFocusFields;
+      if (true && (evt.which === DELETE_KEYCODE || evt.keyCode === DELETE_KEYCODE)) {
+        currLabel = evt.currentTarget.value;
+        if (currLabel === "") {
+          deletionIndex = $(evt.currentTarget).parent().index();
+          this.removeOptionAtIndex(deletionIndex);
+          focusIndex = (deletionIndex === 0 ? 0 : deletionIndex - 1);
+          newFocusFields = $(".edit-response-field .sortableParentContainer .option .option-label-input");
+          if (newFocusFields.length > 0) {
+            newFocusFields[focusIndex].focus();
+          }
+          return false;
+        }
+      } else if (evt.which === ENTER_KEYCODE || evt.keyCode === ENTER_KEYCODE) {
+        return this.addOption(evt);
+      }
     };
 
     EditFieldView.prototype.initialize = function(options) {
@@ -438,8 +462,10 @@
           }
           translationData.options = _.clone(this.model.get(Formbuilder.options.mappings.OPTIONS));
         }
+        if (!translationData.options || translationData.options.length === 0) {
+          translationData.options = Formbuilder.generateDefaultOptionsArray();
+        }
       }
-      console.log("label set to [" + translationData.pseudoLabel + "]");
       delete this.model.attributes.field_options;
       delete this.model.attributes.default_value;
       this.model.set(Formbuilder.options.mappings.FIELD_TYPE, toType);
@@ -505,7 +531,7 @@
     };
 
     EditFieldView.prototype.addOption = function(e) {
-      var $el, i, newOption, options;
+      var $el, i, newOption, options, targetSlot;
       $el = $(e.currentTarget);
       i = this.$el.find('.option').index($el.closest('.option'));
       options = this.model.get(Formbuilder.options.mappings.OPTIONS) || [];
@@ -517,13 +543,21 @@
       }
       this.model.set(Formbuilder.options.mappings.OPTIONS, options);
       this.model.trigger("change:" + Formbuilder.options.mappings.OPTIONS);
+      targetSlot = 1 * (i > -1 ? i + 1 : options.length - 1);
+      ($(".edit-response-field .sortableParentContainer .option .option-label-input")[targetSlot]).focus();
       return this.forceRender();
     };
 
     EditFieldView.prototype.removeOption = function(e) {
-      var $el, index, options;
+      var $el, index;
       $el = $(e.currentTarget);
       index = this.$el.find(".js-remove-option").index($el);
+      return this.removeOptionAtIndex(index);
+    };
+
+    EditFieldView.prototype.removeOptionAtIndex = function(index) {
+      var options;
+      console.log("removing at [" + index + "]");
       options = this.model.get(Formbuilder.options.mappings.OPTIONS);
       options.splice(index, 1);
       this.model.set(Formbuilder.options.mappings.OPTIONS, options);
@@ -565,8 +599,19 @@
       'click .fb-add-field-types a': 'addField'
     };
 
+    BuilderView.prototype.captureDelete = function(evt) {
+      if (evt.which === DELETE_KEYCODE || evt.keyCode === DELETE_KEYCODE) {
+        if (evt.target && evt.target.type === "text") {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    };
+
     BuilderView.prototype.initialize = function(options) {
       var newSubmit, selector, setter, _ref7, _ref8;
+      $(document).keydown(this.captureDelete);
       selector = options.selector, this.formBuilder = options.formBuilder, this.bootstrapData = options.bootstrapData;
       if (!(this.bootstrapData instanceof Array)) {
         this.bootstrapData = this.bootstrapData.fields;
@@ -1316,7 +1361,7 @@
   Formbuilder.registerField('hidden_field', {
     order: 10,
     type: 'non_input',
-    view: "<label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>\n<pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>",
+    view: "<label class=\"preview-only\">" + localPrettyName + "</label>\n<label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>\n<pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>",
     edit: "<div class='fb-label-description'>\n  <div class='fb-edit-section-header'>Label</div>\n  <input type='text' data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>' />\n  <div class='fb-edit-section-header'>Data</div>\n  <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n    placeholder='Add some data to this hidden field'></textarea>\n</div>",
     prettyName: localPrettyName,
     addButton: "<span class='symbol'><span class='fa fa-code'></span></span> " + localPrettyName,
@@ -1414,7 +1459,7 @@
   Formbuilder.registerField('submit_button', {
     order: 20,
     type: 'non_input',
-    view: "<button><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
+    view: "<label class=\"preview-only\">Submit Button</label>\n<button><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
     edit: "<div class='fb-edit-section-header'>Button Label</div>\n<input type=\"text\" data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>'></input>",
     addButton: "<span class='symbol'><span class='fa fa-inbox'></span></span> Submit Button",
     defaultAttributes: function(attrs) {
@@ -1753,7 +1798,7 @@ this["Formbuilder"]["templates"]["partials/edit_field"] = function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p += '<div class=\'fb-tab-pane\' id=\'editField\'>\n  <div class=\'fb-edit-field-wrapper\'></div>\n</div>\n';
+__p += '<div class=\'fb-tab-pane\' id=\'editField\'>\n  <div class=\'fb-edit-field-wrapper\'></div>\n\t<div class=\'fb-edit-finished\'>\n\t\t<a class="fb-button">Add Another Field</a>\n\t</div>\n</div>\n';
 
 }
 return __p
@@ -1767,7 +1812,7 @@ __p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'activ
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n                       // fb.isFormReadyToSave();\n\n    }\n    </script>\n\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n\n</div>\n';
+'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n                       // fb.isFormReadyToSave();\n\n    }\n    </script>\n\n\t\t<!--\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n\t\t-->\n\n</div>\n';
 
 }
 return __p
