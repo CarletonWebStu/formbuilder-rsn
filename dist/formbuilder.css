@@ -35,8 +35,7 @@
 .edit-response-field select{font-size:14px}
 .fb-field-wrapper .actions-wrapper a.js-duplicate{background-color:#9a9c9c;border:none}
 .fb-edit-field-wrapper .js-add-option{background-color:#2ecc71;border:none}
-.fb-edit-field-wrapper .js-drag-handle{background-color:#d3d3d3;padding-left:6px;padding-right:6px;font-size:18px;cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}
-.fb-edit-field-wrapper .js-drag-handle:before{content:'\2195'}
+.fb-edit-field-wrapper .js-drag-handle{background-color:#9a9c9c;border:none;padding:3px 9px}
 .fb-field-wrapper .actions-wrapper a.js-clear,.fb-edit-field-wrapper .js-remove-option{background-color:#e74c3c;border:none}
 .fb-field-wrapper .subtemplate-wrapper{border:1px dashed transparent;margin-bottom:10px;padding:10px;position:relative}
 .fb-field-wrapper .subtemplate-wrapper .cover{position:absolute;top:0;left:0;height:100%;width:100%;z-index:2}

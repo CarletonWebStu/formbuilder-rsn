@@ -596,7 +596,7 @@
       'click .js-save-form': 'saveForm',
       'click .fb-tabs a': 'showTab',
       'click .fb-add-field-types a': 'addField',
-      'click .fb-edit-finished a': 'showTabAdd'
+      'click .fb-edit-finished a': 'showTabAddField'
     };
 
     BuilderView.prototype.captureDelete = function(evt) {
@@ -744,8 +744,12 @@
       }
     };
 
-    BuilderView.prototype.showTabAdd = function(e) {
+    BuilderView.prototype.showTabAddField = function(e) {
       return this.showTabForEl($(".fb-tabs li:eq(0) a"));
+    };
+
+    BuilderView.prototype.showTabEditField = function(e) {
+      return this.showTabForEl($(".fb-tabs li:eq(1) a"));
     };
 
     BuilderView.prototype.showTab = function(e) {
@@ -766,20 +770,6 @@
         return this.createAndShowEditView(first_model);
       }
     };
-
-    /*
-    showTab: (e) ->
-      $el = $(e.currentTarget)
-      target = $el.data('target')
-      $el.closest('li').addClass('active').siblings('li').removeClass('active')
-      $(target).addClass('active').siblings('.fb-tab-pane').removeClass('active')
-    
-      @unlockLeftWrapper() unless target == '#editField'
-    
-      if target == '#editField' && !@editView && (first_model = @collection.models[0])
-        @createAndShowEditView(first_model)
-    */
-
 
     BuilderView.prototype.addOne = function(responseField, _, options) {
       var $replacePosition, view;
@@ -1732,7 +1722,7 @@ __p += '\n\n<div class=\'sortableParentContainer\'>\n\t<div class=\'option sorta
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
 '" title="Add Option"><i class=\'fa fa-plus-circle\'></i></a>\n\t  <a class="js-remove-option ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
-'" title="Remove Option"><i class=\'fa fa-minus-circle\'></i></a>\n\t  <span class="js-drag-handle"></span>\n\t</div>\n</div>\n\n';
+'" title="Remove Option"><i class=\'fa fa-minus-circle\'></i></a>\n\t  <span class="fb-button js-drag-handle"><i class=\'fa fa-arrows-v\'></i></span>\n\t</div>\n</div>\n\n';
  if (typeof includeOther !== 'undefined'){ ;
 __p += '\n  <label>\n    <input type=\'checkbox\' data-rv-checked=\'model.' +
 ((__t = ( Formbuilder.options.mappings.INCLUDE_OTHER )) == null ? '' : __t) +
@@ -1831,7 +1821,7 @@ this["Formbuilder"]["templates"]["partials/left_side"] = function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'active\'><a data-target=\'#addField\'>Add new field</a></li>\n    <li><a data-target=\'#editField\'>Edit field</a></li>\n  </ul>\n\n  <div class=\'fb-tab-content\'>\n    ' +
+__p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'active\'><a data-target=\'#addField\'><i class=\'fa fa-plus-circle\'></i> Add new field</a></li>\n    <li><a data-target=\'#editField\'><i class=\'fa fa-edit\'></i> Edit field</a></li>\n  </ul>\n\n  <div class=\'fb-tab-content\'>\n    ' +
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
