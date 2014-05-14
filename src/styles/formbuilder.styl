@@ -3,6 +3,7 @@ $sec-color = #16a085
 
 $affirmitive-color = #2ecc71
 $negative-color = #e74c3c
+$ambivalent-color = #9a9c9c
 
 $field-bg = #f0f4f5
 $field-border = darken($field-bg, 7%)
@@ -245,25 +246,20 @@ $editing-border = darken(desaturate($editing-bg, 15%), 15%)
   }
 }
 
-.fb-field-wrapper .actions-wrapper a.js-duplicate,
+.fb-field-wrapper .actions-wrapper a.js-duplicate {
+  background-color: $ambivalent-color;
+  border: none;
+}
+
 .fb-edit-field-wrapper .js-add-option {
   background-color: $affirmitive-color;
   border: none;
 }
 
 .fb-edit-field-wrapper .js-drag-handle {
-  background-color: lightgray;
-  padding-left: 6px;
-  padding-right: 6px;
-  font-size: 18px;
-  cursor: -webkit-grab;
-  cursor: -moz-grab;
-  cursor: grab;
-
-  &:before {
-	// see http://character-code.com/arrows-html-codes.php
-    content: '\2195';
-  }
+  background-color: $ambivalent-color;
+  border: none;
+  padding: 3px 9px;
 }
 
 .fb-field-wrapper .actions-wrapper a.js-clear,
@@ -453,4 +449,13 @@ $editing-border = darken(desaturate($editing-bg, 15%), 15%)
 .fb-error {
 	color: #FF0000;
 	font-style: italic;
+}
+
+.fb-edit-finished {
+	margin-top: 25px;
+}
+
+.fb-field-instructions .instructionExample {
+  margin-top: 10px;
+  font-style: italic;
 }

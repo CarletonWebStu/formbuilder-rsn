@@ -1,3 +1,5 @@
+localPrettyName = "Dropdown"
+
 Formbuilder.registerField 'dropdown',
 
   order: 24
@@ -31,9 +33,13 @@ Formbuilder.registerField 'dropdown',
     <%= Formbuilder.templates['edit/options']({ includeBlank: true }) %>
   """###
 
-  addButton: """
-    <span class="symbol"><span class="fa fa-caret-down"></span></span> Dropdown
+  instructionDetails: """
+    <div class="instructionText">Used when you want the user to select one (and only one) option from a pre-populated list.</div>
+    <div class="instructionExample">What is your major? <select><option>Biology</option></select></div>
   """
+
+  prettyName: localPrettyName
+  addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> " + localPrettyName
 
   defaultAttributes: (attrs) ->
     _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray())

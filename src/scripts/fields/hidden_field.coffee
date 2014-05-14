@@ -1,3 +1,4 @@
+localPrettyName = "Hidden Field"
 Formbuilder.registerField 'hidden_field',
 
   order: 10
@@ -5,6 +6,7 @@ Formbuilder.registerField 'hidden_field',
   type: 'non_input'
 
   view: """
+    <label class="preview-only">#{localPrettyName}</label>
     <label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>
     <pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>
   """
@@ -19,9 +21,13 @@ Formbuilder.registerField 'hidden_field',
     </div>
   """
 
-  addButton: """
-    <span class='symbol'><span class='fa fa-code'></span></span> Hidden Field
+  instructionDetails: """
+    <div class="instructionText">Used to pass data through the form without displaying it to the user.</div>
   """
+
+
+  prettyName: localPrettyName
+  addButton: "<span class='symbol'><span class='fa fa-code'></span></span> " + localPrettyName
 
   defaultAttributes: (attrs) ->
     _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Hidden Field')

@@ -88,13 +88,17 @@
 }).call(this);
 
 (function() {
-  var BuilderView, DeletedFieldCollection, DeletedFieldModel, EditFieldView, Formbuilder, FormbuilderCollection, FormbuilderModel, ViewFieldView, emptyOrWhitespaceRegex, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
+  var BuilderView, DELETE_KEYCODE, DeletedFieldCollection, DeletedFieldModel, ENTER_KEYCODE, EditFieldView, Formbuilder, FormbuilderCollection, FormbuilderModel, ViewFieldView, emptyOrWhitespaceRegex, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   emptyOrWhitespaceRegex = RegExp(/^\s*$/);
+
+  DELETE_KEYCODE = 8;
+
+  ENTER_KEYCODE = 13;
 
   FormbuilderModel = (function(_super) {
     __extends(FormbuilderModel, _super);
@@ -192,7 +196,7 @@
     ViewFieldView.prototype.className = "fb-field-wrapper";
 
     ViewFieldView.prototype.events = {
-      'click .subtemplate-wrapper': 'focusEditView',
+      'click .subtemplate-wrapper .cover': 'focusEditView',
       'click .js-duplicate': 'duplicate',
       'click .js-clear': 'clear'
     };
@@ -247,7 +251,27 @@
       'click .js-add-option': 'addOption',
       'click .js-remove-option': 'removeOption',
       'click .js-default-updated': 'defaultUpdated',
-      'input .option-label-input': 'forceRender'
+      'input .option-label-input': 'forceRender',
+      'keydown .option-label-input': 'handleSpecialKeysDuringOptionEditing'
+    };
+
+    EditFieldView.prototype.handleSpecialKeysDuringOptionEditing = function(evt) {
+      var currLabel, deletionIndex, focusIndex, newFocusFields;
+      if (true && (evt.which === DELETE_KEYCODE || evt.keyCode === DELETE_KEYCODE)) {
+        currLabel = evt.currentTarget.value;
+        if (currLabel === "") {
+          deletionIndex = $(evt.currentTarget).parent().index();
+          this.removeOptionAtIndex(deletionIndex);
+          focusIndex = (deletionIndex === 0 ? 0 : deletionIndex - 1);
+          newFocusFields = $(".edit-response-field .sortableParentContainer .option .option-label-input");
+          if (newFocusFields.length > 0) {
+            newFocusFields[focusIndex].focus();
+          }
+          return false;
+        }
+      } else if (evt.which === ENTER_KEYCODE || evt.keyCode === ENTER_KEYCODE) {
+        return this.addOption(evt);
+      }
     };
 
     EditFieldView.prototype.initialize = function(options) {
@@ -256,10 +280,9 @@
     };
 
     EditFieldView.prototype.render = function() {
-      var allowTypeChange, dvalIsEmpty, storedDefaultVal, _ref6,
+      var allowTypeChange, dvalIsEmpty, _ref6,
         _this = this;
-      storedDefaultVal = this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE);
-      dvalIsEmpty = storedDefaultVal === null || storedDefaultVal === void 0 || emptyOrWhitespaceRegex.test(storedDefaultVal);
+      dvalIsEmpty = Formbuilder.helpers.fieldIsEmptyOrNull(this.model.get(Formbuilder.options.mappings.DEFAULT_VALUE));
       this.model.attributes.displayDefaultValueUI = !dvalIsEmpty;
       this.$el.html(Formbuilder.templates["edit/base" + (!this.model.is_input() ? '_non_input' : '')]({
         rf: this.model
@@ -301,6 +324,11 @@
           return $("#fieldDisplayEditable").remove();
         }
       }), 10);
+      setTimeout((function() {
+        if (Formbuilder.helpers.fieldIsEmptyOrNull(_this.model.get(Formbuilder.options.mappings.LABEL))) {
+          return $(".fb-label-description input").focus();
+        }
+      }), 10);
       return this;
     };
 
@@ -314,7 +342,7 @@
     };
 
     EditFieldView.prototype.changeEditingFieldTypeWithDataLossWarning = function(fromType, toType) {
-      var inputData, multiFields, numCheckedOptions, numOptions, o, warning, _i, _len, _ref6;
+      var inputData, multiFields, numCheckedOptions, numOptions, o, prettyFrom, prettyTo, warning, _i, _len, _ref6;
       if (fromType === toType) {
         return;
       }
@@ -364,7 +392,9 @@
       if (warning === "") {
         return this.changeEditingFieldType(fromType, toType);
       } else {
-        warning = "Warning - by changing this field from \"" + fromType + "\" to \"" + toType + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!";
+        prettyFrom = Formbuilder.fields[fromType].prettyName ? Formbuilder.fields[fromType].prettyName : fromType;
+        prettyTo = Formbuilder.fields[toType].prettyName ? Formbuilder.fields[toType].prettyName : toType;
+        warning = "Warning - by changing this field from \"" + prettyFrom + "\" to \"" + prettyTo + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!";
         if (confirm(warning)) {
           return this.changeEditingFieldType(fromType, toType);
         } else {
@@ -432,8 +462,10 @@
           }
           translationData.options = _.clone(this.model.get(Formbuilder.options.mappings.OPTIONS));
         }
+        if (!translationData.options || translationData.options.length === 0) {
+          translationData.options = Formbuilder.generateDefaultOptionsArray();
+        }
       }
-      console.log("label set to [" + translationData.pseudoLabel + "]");
       delete this.model.attributes.field_options;
       delete this.model.attributes.default_value;
       this.model.set(Formbuilder.options.mappings.FIELD_TYPE, toType);
@@ -499,7 +531,7 @@
     };
 
     EditFieldView.prototype.addOption = function(e) {
-      var $el, i, newOption, options;
+      var $el, i, newOption, options, targetSlot;
       $el = $(e.currentTarget);
       i = this.$el.find('.option').index($el.closest('.option'));
       options = this.model.get(Formbuilder.options.mappings.OPTIONS) || [];
@@ -511,13 +543,20 @@
       }
       this.model.set(Formbuilder.options.mappings.OPTIONS, options);
       this.model.trigger("change:" + Formbuilder.options.mappings.OPTIONS);
+      targetSlot = 1 * (i > -1 ? i + 1 : options.length - 1);
+      ($(".edit-response-field .sortableParentContainer .option .option-label-input")[targetSlot]).focus();
       return this.forceRender();
     };
 
     EditFieldView.prototype.removeOption = function(e) {
-      var $el, index, options;
+      var $el, index;
       $el = $(e.currentTarget);
       index = this.$el.find(".js-remove-option").index($el);
+      return this.removeOptionAtIndex(index);
+    };
+
+    EditFieldView.prototype.removeOptionAtIndex = function(index) {
+      var options;
       options = this.model.get(Formbuilder.options.mappings.OPTIONS);
       options.splice(index, 1);
       this.model.set(Formbuilder.options.mappings.OPTIONS, options);
@@ -556,11 +595,25 @@
       'click .js-undo-delete': 'undoDelete',
       'click .js-save-form': 'saveForm',
       'click .fb-tabs a': 'showTab',
-      'click .fb-add-field-types a': 'addField'
+      'click .fb-add-field-types a': 'addField',
+      'click .fb-edit-finished a': 'showTabAddField',
+      'mouseenter .fb-add-field-types a': 'showFieldInstructions',
+      'mouseleave .fb-add-field-types a': 'clearFieldInstructions'
+    };
+
+    BuilderView.prototype.captureDelete = function(evt) {
+      if (evt.which === DELETE_KEYCODE || evt.keyCode === DELETE_KEYCODE) {
+        if (evt.target && evt.target.type === "text") {
+          return true;
+        } else {
+          return false;
+        }
+      }
     };
 
     BuilderView.prototype.initialize = function(options) {
       var newSubmit, selector, setter, _ref7, _ref8;
+      $(document).keydown(this.captureDelete);
       selector = options.selector, this.formBuilder = options.formBuilder, this.bootstrapData = options.bootstrapData;
       if (!(this.bootstrapData instanceof Array)) {
         this.bootstrapData = this.bootstrapData.fields;
@@ -693,11 +746,24 @@
       }
     };
 
+    BuilderView.prototype.showTabAddField = function(e) {
+      return this.showTabForEl($(".fb-tabs li:eq(0) a"));
+    };
+
+    BuilderView.prototype.showTabEditField = function(e) {
+      return this.showTabForEl($(".fb-tabs li:eq(1) a"));
+    };
+
     BuilderView.prototype.showTab = function(e) {
-      var $el, first_model, target;
+      var $el;
       $el = $(e.currentTarget);
-      target = $el.data('target');
+      return this.showTabForEl($el);
+    };
+
+    BuilderView.prototype.showTabForEl = function($el) {
+      var first_model, target;
       $el.closest('li').addClass('active').siblings('li').removeClass('active');
+      target = $el.data('target');
       $(target).addClass('active').siblings('.fb-tab-pane').removeClass('active');
       if (target !== '#editField') {
         this.unlockLeftWrapper();
@@ -765,6 +831,11 @@
       $addFieldButtons = this.$el.find("[data-field-type]");
       return $addFieldButtons.draggable({
         connectToSortable: this.$responseFields,
+        cursorAt: {
+          left: this.$responseFields.width() / 2,
+          top: 20
+        },
+        distance: 15,
         helper: function() {
           var $helper;
           $helper = $("<div class='response-field-draggable-helper' />");
@@ -785,6 +856,17 @@
     BuilderView.prototype.hideShowNoResponseFields = function() {
       var _ref7;
       return this.$el.find(".fb-no-response-fields")[(this.collection.length === 1 && Formbuilder.options.FORCE_BOTTOM_SUBMIT && ((_ref7 = this.collection.models[0]) != null ? _ref7.is_last_submit() : void 0)) || this.collection.length === 0 ? 'show' : 'hide']();
+    };
+
+    BuilderView.prototype.clearFieldInstructions = function(e) {
+      return $(".fb-field-instructions").text("");
+    };
+
+    BuilderView.prototype.showFieldInstructions = function(e) {
+      var fieldType, instructions;
+      fieldType = $(e.currentTarget).data('field-type');
+      instructions = Formbuilder.fields[fieldType].instructionDetails ? Formbuilder.fields[fieldType].instructionDetails : "";
+      return $(".fb-field-instructions").html(instructions);
     };
 
     BuilderView.prototype.addField = function(e) {
@@ -817,6 +899,7 @@
       });
       $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing');
       if (this.editView) {
+        console.log("in here");
         if (this.editView.model.cid === model.cid && !allowRepeatCreation) {
           this.$el.find(".fb-tabs a[data-target=\"#editField\"]").click();
           this.scrollLeftWrapper($responseFieldEl, (typeof oldPadding !== "undefined" && oldPadding !== null) && oldPadding);
@@ -974,8 +1057,11 @@
       simple_format: function(x) {
         return x != null ? x.replace(/\n/g, '<br />') : void 0;
       },
+      fieldIsEmptyOrNull: function(s) {
+        return s === null || s === void 0 || emptyOrWhitespaceRegex.test(s);
+      },
       warnIfEmpty: function(s, warning) {
-        if (s === null || s === void 0 || emptyOrWhitespaceRegex.test(s)) {
+        if (Formbuilder.helpers.fieldIsEmptyOrNull(s)) {
           return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>";
         }
         return s;
@@ -1038,14 +1124,33 @@
     Formbuilder.prototype.debug = {};
 
     Formbuilder.getSupportedFields = function() {
-      var merged, rv,
+      var merged, nonInput, rv,
         _this = this;
       merged = {};
       $.extend(true, merged, this.inputFields, this.nonInputFields);
       rv = _(merged).map(function(obj, key) {
-        return key;
+        return {
+          type: obj.type,
+          sorter: obj.order,
+          value: key,
+          display: obj.prettyName ? obj.prettyName : key
+        };
       });
-      rv.sort();
+      nonInput = "non_input";
+      rv.sort(function(a, b) {
+        if (a.type === nonInput && b.type !== nonInput) {
+          return 1;
+        } else if (a.type !== nonInput && b.type === nonInput) {
+          return -1;
+        }
+        if (a.sorter > b.sorter) {
+          return 1;
+        } else if (a.sorter < b.sorter) {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
       return rv;
     };
 
@@ -1201,6 +1306,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Checkboxes";
+
   Formbuilder.registerField('checkboxes', {
     order: 10,
     view: "<%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='checkbox' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </label>\n  </div>\n<% } %>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='checkbox' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
@@ -1210,7 +1319,9 @@
     """
     */
 
-    addButton: "<span class=\"symbol\"><span class=\"fa fa-check-square-o\"></span></span> Checkboxes",
+    instructionDetails: "<div class=\"instructionText\">Used when you want the user to select any number of options from a pre-populated list.</div>\n<div class=\"instructionExample\">What sports do you enjoy?<br>\n  <input type=\"checkbox\"> Basketball<br>\n  <input type=\"checkbox\"> Football<br>\n  <input type=\"checkbox\"> Soccer<br>\n  <input type=\"checkbox\"> Ultimate Frisbee<br>\n  <input type=\"checkbox\"> Volleyball<br>\n</div>",
+    prettyName: localPrettyName,
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-check-square-o\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       return attrs;
@@ -1230,6 +1341,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Dropdown";
+
   Formbuilder.registerField('dropdown', {
     order: 24,
     view: "<select>\n  <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>\n    <option value=''></option>\n  <% } %>\n\n  <%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n  %>\n    <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </option>\n  <% } %>\n</select>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>",
@@ -1239,7 +1354,9 @@
     """
     */
 
-    addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> Dropdown",
+    instructionDetails: "<div class=\"instructionText\">Used when you want the user to select one (and only one) option from a pre-populated list.</div>\n<div class=\"instructionExample\">What is your major? <select><option>Biology</option></select></div>",
+    prettyName: localPrettyName,
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       _.pathAssign(attrs, Formbuilder.options.mappings.INCLUDE_BLANK, false);
@@ -1270,12 +1387,18 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Hidden Field";
+
   Formbuilder.registerField('hidden_field', {
     order: 10,
     type: 'non_input',
-    view: "<label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>\n<pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>",
+    view: "<label class=\"preview-only\">" + localPrettyName + "</label>\n<label class='section-name'><%= rf.get(Formbuilder.options.mappings.LABEL) %></label>\n<pre><code><%= _.escape(rf.get(Formbuilder.options.mappings.DESCRIPTION)) %></code></pre>",
     edit: "<div class='fb-label-description'>\n  <div class='fb-edit-section-header'>Label</div>\n  <input type='text' data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>' />\n  <div class='fb-edit-section-header'>Data</div>\n  <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n    placeholder='Add some data to this hidden field'></textarea>\n</div>",
-    addButton: "<span class='symbol'><span class='fa fa-code'></span></span> Hidden Field",
+    instructionDetails: "<div class=\"instructionText\">Used to pass data through the form without displaying it to the user.</div>",
+    prettyName: localPrettyName,
+    addButton: "<span class='symbol'><span class='fa fa-code'></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Hidden Field');
       return attrs;
@@ -1295,6 +1418,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Multiline Text";
+
   Formbuilder.registerField('paragraph', {
     order: 5,
     view: "<textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>",
@@ -1305,7 +1432,15 @@
     """
     */
 
-    addButton: "<span class=\"symbol\">&#182;</span> Paragraph"
+    /*
+    addButton: """
+      <span class="symbol">&#182;</span> Paragraph
+    """
+    */
+
+    instructionDetails: "<div class=\"instructionText\">Used to gather longer amounts of free-form text input from a user.</div>\n<div class=\"instructionExample\">Explain why you are the best candidate for this position:\n  <br>\n  <textarea rows=5 cols=30></textarea>\n</div>",
+    prettyName: localPrettyName,
+    addButton: "<span class=\"symbol\">&#182;</span> " + localPrettyName
   });
 
 }).call(this);
@@ -1321,6 +1456,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Radio Buttons";
+
   Formbuilder.registerField('radio', {
     order: 15,
     view: "<%\n  var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n  for (var i = 0 ; i < optionsForLooping.length ; i++) {\n%>\n  <div>\n    <label class='fb-option'>\n      <input type='radio' <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'checked' %> onclick=\"javascript: return false;\" />\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </label>\n  </div>\n<% } %>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>\n\n<% if (rf.get(Formbuilder.options.mappings.INCLUDE_OTHER)) { %>\n  <div class='other-option'>\n    <label class='fb-option'>\n      <input type='radio' />\n      Other\n    </label>\n\n    <input type='text' />\n  </div>\n<% } %>",
@@ -1330,7 +1469,9 @@
     """
     */
 
-    addButton: "<span class=\"symbol\"><span class=\"fa fa-circle-o\"></span></span> Radio Buttons",
+    instructionDetails: "<div class=\"instructionText\">Used when you want the user to select one (and only one) option from a pre-populated list.</div>\n<div class=\"instructionExample\">Do you have a driver's license?<br>\n  <input type=\"radio\"> Yes<br>\n  <input type=\"radio\"> No<br>\n</div>",
+    prettyName: localPrettyName,
+    addButton: "<span class=\"symbol\"><span class=\"fa fa-circle-o\"></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       return attrs;
@@ -1354,7 +1495,7 @@
   Formbuilder.registerField('submit_button', {
     order: 20,
     type: 'non_input',
-    view: "<button disabled><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
+    view: "<label class=\"preview-only\">Submit Button</label>\n<button><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
     edit: "<div class='fb-edit-section-header'>Button Label</div>\n<input type=\"text\" data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>'></input>",
     addButton: "<span class='symbol'><span class='fa fa-inbox'></span></span> Submit Button",
     defaultAttributes: function(attrs) {
@@ -1366,6 +1507,10 @@
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Short Text";
+
   Formbuilder.registerField('text', {
     order: 0,
     view: "<input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'/>",
@@ -1376,18 +1521,26 @@
     """
     */
 
-    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> Text"
+    instructionDetails: "<div class=\"instructionText\">Used to gather short amounts of free-form text input from a user.</div>\n<div class=\"instructionExample\">Name: <input type=\"text\"></div>",
+    prettyName: localPrettyName,
+    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
   });
 
 }).call(this);
 
 (function() {
+  var localPrettyName;
+
+  localPrettyName = "Text Comment";
+
   Formbuilder.registerField('text_comment', {
     order: 20,
     type: 'non_input',
     view: "<label class=\"preview-only\">Text Comment</label>\n<p><%= rf.get(Formbuilder.options.mappings.DESCRIPTION) %></p>",
     edit: "<div class='fb-label-description'>\n  <div class='fb-edit-section-header'>Text</div>\n  <textarea data-rv-input='model.<%= Formbuilder.options.mappings.DESCRIPTION %>'\n    placeholder='Add some text'></textarea>\n</div>",
-    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> Text Comment",
+    instructionDetails: "<div class=\"instructionText\">Used to display text to the user without requiring any input.</div>\n<div class=\"instructionExample\">Please submit the following information by May 15. The selection committee will select an applicant by the end of June.</div>",
+    prettyName: localPrettyName,
+    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.LABEL, 'Text Comment');
       return attrs;
@@ -1441,11 +1594,11 @@ var __t, __p = '', __e = _.escape, __j = Array.prototype.join;
 function print() { __p += __j.call(arguments, '') }
 with (obj) {
 __p += '<div>\n\t<div id="fieldDisplayEditable" style="display:none">\n\t\tField Type: \n\t\t<select id="fieldTypeSelector">\n\t\t\t';
- _(Formbuilder.getSupportedFields()).each(function(fieldName) { ;
+ _(Formbuilder.getSupportedFields()).each(function(field) { ;
 __p += '\n\t\t\t<option value="' +
-((__t = (fieldName)) == null ? '' : __t) +
+((__t = (field.value)) == null ? '' : __t) +
 '">' +
-((__t = ( fieldName )) == null ? '' : __t) +
+((__t = ( field.display )) == null ? '' : __t) +
 '</option>\n\t\t\t';
  }); ;
 __p += '\n\t\t</select>\n\t</div>\n\t<div id="fieldDisplayNonEditable" style="display:none">\n\t\tField Type: <span data-rv-text="model.' +
@@ -1594,7 +1747,7 @@ __p += '\n\n<div class=\'sortableParentContainer\'>\n\t<div class=\'option sorta
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
 '" title="Add Option"><i class=\'fa fa-plus-circle\'></i></a>\n\t  <a class="js-remove-option ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
-'" title="Remove Option"><i class=\'fa fa-minus-circle\'></i></a>\n\t  <span class="js-drag-handle"></span>\n\t</div>\n</div>\n\n';
+'" title="Remove Option"><i class=\'fa fa-minus-circle\'></i></a>\n\t  <span class="fb-button js-drag-handle"><i class=\'fa fa-arrows-v\'></i></span>\n\t</div>\n</div>\n\n';
  if (typeof includeOther !== 'undefined'){ ;
 __p += '\n  <label>\n    <input type=\'checkbox\' data-rv-checked=\'model.' +
 ((__t = ( Formbuilder.options.mappings.INCLUDE_OTHER )) == null ? '' : __t) +
@@ -1636,13 +1789,13 @@ this["Formbuilder"]["templates"]["page"] = function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p +=
+__p += '<div class="fb-wrap">\n' +
 ((__t = ( Formbuilder.templates['partials/op_buttons']() )) == null ? '' : __t) +
 '\n' +
 ((__t = ( Formbuilder.templates['partials/left_side']() )) == null ? '' : __t) +
 '\n' +
 ((__t = ( Formbuilder.templates['partials/right_side']() )) == null ? '' : __t) +
-'\n<div class=\'fb-clear\'></div>';
+'\n<div class=\'fb-clear\'></div>\n</div>';
 
 }
 return __p
@@ -1673,7 +1826,7 @@ __p += '\n        <a data-field-type="' +
 ((__t = ( f.addButton )) == null ? '' : __t) +
 '\n        </a>\n      ';
  }); ;
-__p += '\n    </div>\n  </div>\n</div>';
+__p += '\n    </div>\n  </div>\n\n  <div class=\'fb-field-instructions\'></div>\n</div>\n';
 
 }
 return __p
@@ -1683,7 +1836,7 @@ this["Formbuilder"]["templates"]["partials/edit_field"] = function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p += '<div class=\'fb-tab-pane\' id=\'editField\'>\n  <div class=\'fb-edit-field-wrapper\'></div>\n</div>\n';
+__p += '<div class=\'fb-tab-pane\' id=\'editField\'>\n  <div class=\'fb-edit-field-wrapper\'></div>\n\t<div class=\'fb-edit-finished\'>\n\t\t<a class="fb-button">Add Another Field</a>\n\t</div>\n</div>\n';
 
 }
 return __p
@@ -1693,11 +1846,11 @@ this["Formbuilder"]["templates"]["partials/left_side"] = function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'active\'><a data-target=\'#addField\'>Add new field</a></li>\n    <li><a data-target=\'#editField\'>Edit field</a></li>\n  </ul>\n\n  <div class=\'fb-tab-content\'>\n    ' +
+__p += '<div class=\'fb-left\'>\n  <ul class=\'fb-tabs\'>\n    <li class=\'active\'><a data-target=\'#addField\'><i class=\'fa fa-plus-circle\'></i> Add new field</a></li>\n    <li><a data-target=\'#editField\'><i class=\'fa fa-edit\'></i> Edit field</a></li>\n  </ul>\n\n  <div class=\'fb-tab-content\'>\n    ' +
 ((__t = ( Formbuilder.templates['partials/add_field']() )) == null ? '' : __t) +
 '\n    ' +
 ((__t = ( Formbuilder.templates['partials/edit_field']() )) == null ? '' : __t) +
-'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n\t\t\t// fb.isFormReadyToSave();\n\n    }\n    </script>\n\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n  </div>\n';
+'\n  </div>\n\n    <script language="Javascript">\n    function debugMe() {\n      // next line hooks up debug button for reason integration\n      // var fb = window.formbuilderInstance;\n\n      console.log("----------------- MODEL START --------------------");\n      for (var i = 0 ; i < fb.mainView.collection.models.length ; i++) {\n        var currModel = fb.mainView.collection.models[i];\n        console.log("[" + i + "] -> [" + JSON.stringify(currModel.attributes) + "]");\n      }\n      console.log("----------------- MODEL END --------------------");\n      // fb.saveForm()\n                       // fb.isFormReadyToSave();\n\n    }\n    </script>\n\n\t\t<!--\n    <p><input type="button" onClick="debugMe();" value="debug info (please ignore)">\n\t\t-->\n\n</div>\n';
 
 }
 return __p
@@ -1794,9 +1947,9 @@ var __t, __p = '', __e = _.escape;
 with (obj) {
 __p += '<div class=\'actions-wrapper\'>\n  <a class="js-duplicate ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
-'" title="Duplicate Field"><i class=\'fa fa-plus-circle\'></i></a>\n  <a class="js-clear ' +
+'" title="Duplicate Field"><i class=\'fa fa-copy\'></i></a>\n  <a class="js-clear ' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
-'" title="Remove Field"><i class=\'fa fa-minus-circle\'></i></a>\n</div>';
+'" title="Remove Field"><i class=\'fa fa-minus-circle\'></i></a>\n</div>\n';
 
 }
 return __p

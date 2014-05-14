@@ -1,4 +1,7 @@
 emptyOrWhitespaceRegex = RegExp(/^\s*$/)
+DELETE_KEYCODE = 8
+ENTER_KEYCODE = 13
+
 
 class FormbuilderModel extends Backbone.DeepModel
   sync: -> # noop
@@ -34,7 +37,7 @@ class ViewFieldView extends Backbone.View
   className: "fb-field-wrapper"
 
   events:
-    'click .subtemplate-wrapper': 'focusEditView'
+    'click .subtemplate-wrapper .cover': 'focusEditView'
     'click .js-duplicate': 'duplicate'
     'click .js-clear': 'clear'
 
@@ -77,6 +80,27 @@ class EditFieldView extends Backbone.View
     'click .js-remove-option': 'removeOption'
     'click .js-default-updated': 'defaultUpdated'
     'input .option-label-input': 'forceRender'
+    'keydown .option-label-input': 'handleSpecialKeysDuringOptionEditing'
+
+  handleSpecialKeysDuringOptionEditing: (evt) ->
+    if true and (evt.which == DELETE_KEYCODE or evt.keyCode == DELETE_KEYCODE)
+      currLabel = evt.currentTarget.value
+      if (currLabel == "")
+        deletionIndex = $(evt.currentTarget).parent().index()
+        @removeOptionAtIndex deletionIndex
+
+        # focus on another option
+        focusIndex = (if deletionIndex == 0 then 0 else deletionIndex - 1)
+        newFocusFields = $(".edit-response-field .sortableParentContainer .option .option-label-input")
+        if (newFocusFields.length > 0)
+          (newFocusFields[focusIndex]).focus()
+
+        return false
+    else if evt.which == ENTER_KEYCODE or evt.keyCode == ENTER_KEYCODE
+      @addOption evt
+
+    # console.log evt
+    # console.log this
 
   initialize: (options) ->
     {@parentView} = options
@@ -84,8 +108,7 @@ class EditFieldView extends Backbone.View
 
   render: ->
     # special case - only show the "default value" UI if user has previously put data in for it
-    storedDefaultVal = @model.get(Formbuilder.options.mappings.DEFAULT_VALUE)
-    dvalIsEmpty = storedDefaultVal == null || storedDefaultVal == undefined || emptyOrWhitespaceRegex.test(storedDefaultVal)
+    dvalIsEmpty = Formbuilder.helpers.fieldIsEmptyOrNull(@model.get(Formbuilder.options.mappings.DEFAULT_VALUE))
     # stuff a val into the model so that rivets can render appropriately
     @model.attributes.displayDefaultValueUI = (not dvalIsEmpty)
 
@@ -125,6 +148,12 @@ class EditFieldView extends Backbone.View
         $("#fieldDisplayNonEditable").css("display", "block")
         $("#fieldDisplayEditable").remove()
 
+    ), 10)
+
+    # and another one - focus the "Label" field if it's empty
+    setTimeout((=>
+      if (Formbuilder.helpers.fieldIsEmptyOrNull(@model.get(Formbuilder.options.mappings.LABEL)))
+        $(".fb-label-description input").focus()
     ), 10)
 
     return @
@@ -183,7 +212,10 @@ class EditFieldView extends Backbone.View
     if (warning == "")
       @changeEditingFieldType(fromType, toType)
     else
-      warning = "Warning - by changing this field from \"" + fromType + "\" to \"" + toType + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!"
+      prettyFrom = if Formbuilder.fields[fromType].prettyName then Formbuilder.fields[fromType].prettyName else fromType
+      prettyTo = if Formbuilder.fields[toType].prettyName then Formbuilder.fields[toType].prettyName else toType
+
+      warning = "Warning - by changing this field from \"" + prettyFrom + "\" to \"" + prettyTo + "\", " + warning + ". Are you sure you want to do this? This cannot be undone!"
 
       if (confirm(warning))
         @changeEditingFieldType(fromType, toType)
@@ -239,7 +271,12 @@ class EditFieldView extends Backbone.View
 
         translationData.options = _.clone(@model.get(Formbuilder.options.mappings.OPTIONS))
 
-    console.log "label set to [" + translationData.pseudoLabel + "]"
+
+      # when we switch to one of the multiple choice field types, let's add some default options
+      if (!translationData.options or translationData.options.length == 0)
+        translationData.options = Formbuilder.generateDefaultOptionsArray()
+
+    # console.log "label set to [" + translationData.pseudoLabel + "]"
 
     # we've extracted the relevant data; now let's update the model
     # delete stuff that may not exist on the destination type; it'll get re-created if necessary
@@ -321,11 +358,19 @@ class EditFieldView extends Backbone.View
 
     @model.set Formbuilder.options.mappings.OPTIONS, options
     @model.trigger "change:#{Formbuilder.options.mappings.OPTIONS}"
+
+    # let's focus on the newly added element...
+    targetSlot = 1 * (if i > -1 then i + 1 else options.length - 1)
+    ($(".edit-response-field .sortableParentContainer .option .option-label-input")[targetSlot]).focus()
+
     @forceRender()
 
   removeOption: (e) ->
     $el = $(e.currentTarget)
     index = @$el.find(".js-remove-option").index($el)
+    @removeOptionAtIndex(index)
+
+  removeOptionAtIndex: (index) ->
     options = @model.get Formbuilder.options.mappings.OPTIONS
     options.splice index, 1
     @model.set Formbuilder.options.mappings.OPTIONS, options
@@ -352,8 +397,21 @@ class BuilderView extends Backbone.View
     'click .js-save-form': 'saveForm'
     'click .fb-tabs a': 'showTab'
     'click .fb-add-field-types a': 'addField'
+    'click .fb-edit-finished a': 'showTabAddField'
+    'mouseenter .fb-add-field-types a': 'showFieldInstructions'
+    'mouseleave .fb-add-field-types a': 'clearFieldInstructions'
+
+  # unless the user is editing text, let's intercept delete keypresses. otherwise too easy to go back in the history
+  captureDelete: (evt) ->
+    if (evt.which == DELETE_KEYCODE or evt.keyCode == DELETE_KEYCODE)
+      if (evt.target and evt.target.type == "text")
+        return true
+      else
+        return false
 
   initialize: (options) ->
+    $(document).keydown(@captureDelete)
+
     {selector, @formBuilder, @bootstrapData} = options
 
     if (!(@bootstrapData instanceof Array))
@@ -478,10 +536,20 @@ class BuilderView extends Backbone.View
       @$fbLeft.css
         'margin-top': proposedMargin
 
+  showTabAddField: (e) ->
+    @showTabForEl($(".fb-tabs li:eq(0) a"))
+
+  showTabEditField: (e) ->
+    @showTabForEl($(".fb-tabs li:eq(1) a"))
+
   showTab: (e) ->
     $el = $(e.currentTarget)
-    target = $el.data('target')
+    @showTabForEl($el)
+
+  showTabForEl: ($el) ->
+    # $el = $(e.currentTarget)
     $el.closest('li').addClass('active').siblings('li').removeClass('active')
+    target = $el.data('target')
     $(target).addClass('active').siblings('.fb-tab-pane').removeClass('active')
 
     @unlockLeftWrapper() unless target == '#editField'
@@ -548,6 +616,8 @@ class BuilderView extends Backbone.View
 
     $addFieldButtons.draggable
       connectToSortable: @$responseFields
+      cursorAt: { left: @$responseFields.width()/2, top: 20 }
+      distance: 15
       helper: =>
         $helper = $("<div class='response-field-draggable-helper' />")
         $helper.css
@@ -566,6 +636,14 @@ class BuilderView extends Backbone.View
         Formbuilder.options.FORCE_BOTTOM_SUBMIT and
         @collection.models[0]?.is_last_submit()) or #or if we have no fields
       @collection.length is 0) then 'show' else 'hide']()
+
+  clearFieldInstructions: (e) ->
+    $(".fb-field-instructions").text("")
+
+  showFieldInstructions: (e) ->
+    fieldType = $(e.currentTarget).data('field-type')
+    instructions = if Formbuilder.fields[fieldType].instructionDetails then Formbuilder.fields[fieldType].instructionDetails else ""
+    $(".fb-field-instructions").html(instructions)
 
   addField: (e) ->
     field_type = $(e.currentTarget).data('field-type')
@@ -590,6 +668,7 @@ class BuilderView extends Backbone.View
     $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing')
 
     if @editView
+      console.log "in here"
       if @editView.model.cid is model.cid and not allowRepeatCreation
         @$el.find(".fb-tabs a[data-target=\"#editField\"]").click()
         @scrollLeftWrapper $responseFieldEl, (oldPadding? && oldPadding)
@@ -718,8 +797,11 @@ class Formbuilder
     simple_format: (x) ->
       x?.replace(/\n/g, '<br />')
 
+    fieldIsEmptyOrNull: (s) ->
+      s == null || s == undefined || emptyOrWhitespaceRegex.test(s)
+
     warnIfEmpty: (s, warning) ->
-      if (s == null || s == undefined || emptyOrWhitespaceRegex.test(s))
+      if (Formbuilder.helpers.fieldIsEmptyOrNull(s))
         return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>"
       s
 
@@ -785,10 +867,23 @@ class Formbuilder
     $.extend(true, merged, @inputFields, @nonInputFields)
 
     rv = _(merged).map((obj, key) =>
-      key
+      { type:obj.type, sorter:obj.order, value: key, display: if obj.prettyName then obj.prettyName else key }
       )
 
-    rv.sort()
+    nonInput = "non_input"
+    # rv.sort()
+    rv.sort (a,b) ->
+      if (a.type == nonInput and b.type != nonInput)
+        return 1
+      else if (a.type != nonInput and b.type == nonInput)
+        return -1
+      
+      if (a.sorter > b.sorter)
+        return 1
+      else if (a.sorter < b.sorter)
+        return -1
+      else
+        return 0
 
     # rv = ["checkboxes","text"]
     # rv = @inputFields
