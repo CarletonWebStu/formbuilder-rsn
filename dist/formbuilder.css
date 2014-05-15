@@ -23,7 +23,7 @@
 .fb-field-instructions{opacity:.75;font-size:.9em}
 #editField{background-color:#fff9c9}
 .fb-response-fields{min-height:100px;position:relative}
-.fb-response-fields a.sortable-placeholder{display:block;border:1px dashed #90aeb5;min-height:80px;height:80px;width:100%}
+.fb-response-fields a.sortable-placeholder{display:block;border:1px dashed #90aeb5;min-height:80px;height:80px;width:100%;margin-bottom:23px}
 .fb-field-wrapper{cursor:pointer;position:relative;margin-bottom:20px;background-color:#f0f4f5;}
 .fb-field-wrapper input{border-radius:3px;border:thin solid #ddd}
 .fb-response-fields .fb-field-wrapper,.fb-button{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}
