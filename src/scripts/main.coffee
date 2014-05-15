@@ -848,7 +848,7 @@ class Formbuilder
     dict:
       ALL_CHANGES_SAVED: 'All changes saved'
       EMPTY_LABEL_WARNING: 'Enter a label'
-      EMPTY_OPTION_WARNING: 'Enter a name'
+      EMPTY_OPTION_WARNING: 'Enter an option'
       EMPTY_OPTION_LIST_WARNING: 'Enter options'
       SAVE_FORM: 'Save form'
       UNSAVED_CHANGES: 'You have unsaved changes. If you leave this page, you will lose those changes!'
