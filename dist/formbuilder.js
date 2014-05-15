@@ -1354,7 +1354,7 @@
     """
     */
 
-    instructionDetails: "<div class=\"instructionText\">Used when you want the user to select one (and only one) option from a pre-populated list.</div>\n<div class=\"instructionExample\">What is your major? <select><option>Biology</option></select></div>",
+    instructionDetails: "<div class=\"instructionText\">Used when you want the user to select one (and only one) option from a pre-populated list.</div>\n<div class=\"instructionExample\">What is your major?<br><select><option>Biology</option></select></div>",
     prettyName: localPrettyName,
     addButton: "<span class='symbol'><span class='form-elements-icon form-elements-icon-dropdown'></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
@@ -1521,7 +1521,7 @@
     """
     */
 
-    instructionDetails: "<div class=\"instructionText\">Used to gather short amounts of free-form text input from a user.</div>\n<div class=\"instructionExample\">Name: <input type=\"text\"></div>",
+    instructionDetails: "<div class=\"instructionText\">Used to gather short amounts of free-form text input from a user.</div>\n<div class=\"instructionExample\">Name:<br><input type=\"text\"></div>",
     prettyName: localPrettyName,
     addButton: "<span class='symbol'><span class='form-elements-icon form-elements-icon-short-text'></span></span> " + localPrettyName
   });
