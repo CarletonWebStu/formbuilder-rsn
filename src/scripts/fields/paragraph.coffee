@@ -32,7 +32,7 @@ Formbuilder.registerField 'paragraph',
   """
 
   prettyName: localPrettyName
-  addButton: "<span class=\"symbol\">&#182;</span> " + localPrettyName
+  addButton: "<span class='symbol'><span class='form-elements-icon form-elements-icon-long-text-2'></span></span> " + localPrettyName
 
   # defaultAttributes: (attrs) ->
   #   _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')

@@ -1,4 +1,4 @@
-ALL_TASKS = ['jst:all', 'coffee:all', 'concat:forReason', 'concat:standalone', 'stylus:all', 'clean:compiled']
+ALL_TASKS = ['jst:all', 'coffee:all', 'concat:forReason', 'concat:standalone', 'stylus:all', 'concat:combineCss', 'clean:compiled']
 
 # formbuilder.js must be compiled in this order:
 # 1. rivets-config
@@ -86,6 +86,15 @@ module.exports = (grunt) ->
             'bower_components/backbone-deep-model/src/deep-model.js'
           ]
 
+      # combines our compiled stylus file with the custom embedded font
+      combineCss:
+        files:
+          '<%= distFolder %>/formbuilder.css': [
+            '<%= compiledFolder %>/formbuilder-compiled.css'
+            '<%= srcFolder %>/styles/form-elements-font.css'
+          ]
+
+
     cssmin:
       dist:
         files:
@@ -95,9 +104,10 @@ module.exports = (grunt) ->
     stylus:
       all:
         files:
-          '<%= compiledFolder %>/formbuilder.css': '<%= srcFolder %>/styles/**.styl'
-          '<%= distFolder %>/formbuilder.css': '<%= compiledFolder %>/**/*.css'
-
+          # changing this around; now we'll compile to a temp file, and then we'll run combineCss to bring form-elements-font into formbuilder.css
+          '<%= compiledFolder %>/formbuilder-compiled.css': '<%= srcFolder %>/styles/**.styl'
+          # '<%= distFolder %>/formbuilder.css': '<%= compiledFolder %>/**/*.css'
+    
     clean:
       compiled:
         ['<%= compiledFolder %>']
