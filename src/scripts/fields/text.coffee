@@ -21,7 +21,8 @@ Formbuilder.registerField 'text',
   """
 
   prettyName: localPrettyName
-  addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
+  # addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
+  addButton: "<span class='symbol'><span class='form-elements-icon form-elements-icon-short-text'></span></span> " + localPrettyName
 
   # defaultAttributes: (attrs) ->
   #   _.pathAssign(attrs, Formbuilder.options.mappings.SIZE, 'small')
