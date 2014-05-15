@@ -35,7 +35,7 @@ Formbuilder.registerField 'dropdown',
 
   instructionDetails: """
     <div class="instructionText">Used when you want the user to select one (and only one) option from a pre-populated list.</div>
-    <div class="instructionExample">What is your major? <select><option>Biology</option></select></div>
+    <div class="instructionExample">What is your major?<br><select><option>Biology</option></select></div>
   """
 
   prettyName: localPrettyName

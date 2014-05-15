@@ -17,7 +17,7 @@ Formbuilder.registerField 'text',
 
   instructionDetails: """
     <div class="instructionText">Used to gather short amounts of free-form text input from a user.</div>
-    <div class="instructionExample">Name: <input type="text"></div>
+    <div class="instructionExample">Name:<br><input type="text"></div>
   """
 
   prettyName: localPrettyName
