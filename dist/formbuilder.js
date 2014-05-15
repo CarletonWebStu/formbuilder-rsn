@@ -1356,7 +1356,7 @@
 
     instructionDetails: "<div class=\"instructionText\">Used when you want the user to select one (and only one) option from a pre-populated list.</div>\n<div class=\"instructionExample\">What is your major? <select><option>Biology</option></select></div>",
     prettyName: localPrettyName,
-    addButton: "<span class=\"symbol\"><span class=\"fa fa-caret-down\"></span></span> " + localPrettyName,
+    addButton: "<span class='symbol'><span class='form-elements-icon form-elements-icon-dropdown'></span></span> " + localPrettyName,
     defaultAttributes: function(attrs) {
       _.pathAssign(attrs, Formbuilder.options.mappings.OPTIONS, Formbuilder.generateDefaultOptionsArray());
       _.pathAssign(attrs, Formbuilder.options.mappings.INCLUDE_BLANK, false);
@@ -1440,7 +1440,7 @@
 
     instructionDetails: "<div class=\"instructionText\">Used to gather longer amounts of free-form text input from a user.</div>\n<div class=\"instructionExample\">Explain why you are the best candidate for this position:\n  <br>\n  <textarea rows=5 cols=30></textarea>\n</div>",
     prettyName: localPrettyName,
-    addButton: "<span class=\"symbol\">&#182;</span> " + localPrettyName
+    addButton: "<span class='symbol'><span class='form-elements-icon form-elements-icon-long-text-2'></span></span> " + localPrettyName
   });
 
 }).call(this);
@@ -1523,7 +1523,7 @@
 
     instructionDetails: "<div class=\"instructionText\">Used to gather short amounts of free-form text input from a user.</div>\n<div class=\"instructionExample\">Name: <input type=\"text\"></div>",
     prettyName: localPrettyName,
-    addButton: "<span class='symbol'><span class='fa fa-font'></span></span> " + localPrettyName
+    addButton: "<span class='symbol'><span class='form-elements-icon form-elements-icon-short-text'></span></span> " + localPrettyName
   });
 
 }).call(this);
