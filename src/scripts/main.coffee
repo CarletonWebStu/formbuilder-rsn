@@ -404,7 +404,7 @@ class BuilderView extends Backbone.View
   # unless the user is editing text, let's intercept delete keypresses. otherwise too easy to go back in the history
   captureDelete: (evt) ->
     if (evt.which == DELETE_KEYCODE or evt.keyCode == DELETE_KEYCODE)
-      if (evt.target and evt.target.type == "text")
+      if (evt.target and (evt.target.type == "text" or evt.target.type == "textarea"))
         return true
       else
         return false
@@ -668,7 +668,6 @@ class BuilderView extends Backbone.View
     $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing')
 
     if @editView
-      console.log "in here"
       if @editView.model.cid is model.cid and not allowRepeatCreation
         @$el.find(".fb-tabs a[data-target=\"#editField\"]").click()
         @scrollLeftWrapper $responseFieldEl, (oldPadding? && oldPadding)

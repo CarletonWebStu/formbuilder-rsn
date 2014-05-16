@@ -603,7 +603,7 @@
 
     BuilderView.prototype.captureDelete = function(evt) {
       if (evt.which === DELETE_KEYCODE || evt.keyCode === DELETE_KEYCODE) {
-        if (evt.target && evt.target.type === "text") {
+        if (evt.target && (evt.target.type === "text" || evt.target.type === "textarea")) {
           return true;
         } else {
           return false;
@@ -899,7 +899,6 @@
       });
       $responseFieldEl.addClass('editing').parent().parent().find(".fb-field-wrapper").not($responseFieldEl).removeClass('editing');
       if (this.editView) {
-        console.log("in here");
         if (this.editView.model.cid === model.cid && !allowRepeatCreation) {
           this.$el.find(".fb-tabs a[data-target=\"#editField\"]").click();
           this.scrollLeftWrapper($responseFieldEl, (typeof oldPadding !== "undefined" && oldPadding !== null) && oldPadding);
