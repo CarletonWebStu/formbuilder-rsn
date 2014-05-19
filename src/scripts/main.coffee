@@ -398,8 +398,6 @@ class BuilderView extends Backbone.View
     'click .fb-tabs a': 'showTab'
     'click .fb-add-field-types a': 'addField'
     'click .fb-edit-finished a': 'showTabAddField'
-    'mouseenter .fb-add-field-types a': 'showFieldInstructions'
-    'mouseleave .fb-add-field-types a': 'clearFieldInstructions'
 
   # unless the user is editing text, let's intercept delete keypresses. otherwise too easy to go back in the history
   captureDelete: (evt) ->
@@ -411,6 +409,17 @@ class BuilderView extends Backbone.View
 
   initialize: (options) ->
     $(document).keydown(@captureDelete)
+
+    $(document).tooltip({
+        track: true
+        items: ".fb-add-field-types a"
+        show: { delay: 500 }
+        content: ( ->
+          return Formbuilder.fields[$(this).attr("data-field-type")].instructionDetails
+        )
+      }
+    )
+
 
     {selector, @formBuilder, @bootstrapData} = options
 
@@ -465,12 +474,15 @@ class BuilderView extends Backbone.View
     if not @undoStack.length
       @$undoDeleteButton.attr('disabled', true)
                         .text(Formbuilder.options.dict.NOTHING_TO_UNDO)
+
+      @$undoDeleteButton.css("display", "none")
     else
       topModel = @undoStack.at(@undoStack.length - 1).get('model')
       lastElType = topModel.get(Formbuilder.options.mappings.FIELD_TYPE)
       lastElLabel = topModel.get(Formbuilder.options.mappings.LABEL)
       @$undoDeleteButton.attr('disabled', false)
                         .text(Formbuilder.options.dict.UNDO_DELETE(lastElType, lastElLabel))
+      @$undoDeleteButton.css("display", "inline-block")
 
   reset: ->
     @$responseFields.html('')
@@ -636,14 +648,6 @@ class BuilderView extends Backbone.View
         Formbuilder.options.FORCE_BOTTOM_SUBMIT and
         @collection.models[0]?.is_last_submit()) or #or if we have no fields
       @collection.length is 0) then 'show' else 'hide']()
-
-  clearFieldInstructions: (e) ->
-    $(".fb-field-instructions").text("")
-
-  showFieldInstructions: (e) ->
-    fieldType = $(e.currentTarget).data('field-type')
-    instructions = if Formbuilder.fields[fieldType].instructionDetails then Formbuilder.fields[fieldType].instructionDetails else ""
-    $(".fb-field-instructions").html(instructions)
 
   addField: (e) ->
     field_type = $(e.currentTarget).data('field-type')

@@ -463,7 +463,20 @@ $editing-border = darken(desaturate($editing-bg, 15%), 15%)
 	margin-top: 25px;
 }
 
-.fb-field-instructions .instructionExample {
+.instructionExample {
   margin-top: 10px;
   font-style: italic;
+}
+
+.ui-tooltip {
+    padding: 8px;
+    position: absolute;
+    z-index: 9999;
+    max-width: 300px;
+    -webkit-box-shadow: 0 0 5px #aaa;
+    box-shadow: 0 0 5px #aaa;
+		background:#FFFFFF;
+}
+body .ui-tooltip {
+    border-width: 2px;
 }

@@ -64,6 +64,8 @@ module.exports = (grunt) ->
             'bower_components/jquery-ui/ui/jquery.ui.draggable.js'
             'bower_components/jquery-ui/ui/jquery.ui.droppable.js'
             'bower_components/jquery-ui/ui/jquery.ui.sortable.js'
+            'bower_components/jquery-ui/ui/jquery.ui.tooltip.js'
+            'bower_components/jquery-ui/ui/jquery.ui.position.js'
             'bower_components/jquery-ui-touch-punch-improved/jquery.ui.touch-punch-improved.js'
             'bower_components/jquery.scrollWindowTo/index.js'
             'bower_components/underscore/underscore-min.js'

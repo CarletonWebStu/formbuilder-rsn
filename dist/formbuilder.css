@@ -77,7 +77,9 @@
 .response-field-checkboxes .fb-option,.response-field-radio .fb-option{margin-bottom:5px;display:inline-block}
 .fb-error{color:#f00;font-style:italic}
 .fb-edit-finished{margin-top:25px}
-.fb-field-instructions .instructionExample{margin-top:10px;font-style:italic}
+.instructionExample{margin-top:10px;font-style:italic}
+.ui-tooltip{padding:8px;position:absolute;z-index:9999;max-width:300px;-webkit-box-shadow:0 0 5px #aaa;box-shadow:0 0 5px #aaa;background:#fff}
+body .ui-tooltip{border-width:2px}
 
 @font-face {
 	font-family: 'form-elements';

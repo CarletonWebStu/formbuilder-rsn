@@ -596,9 +596,7 @@
       'click .js-save-form': 'saveForm',
       'click .fb-tabs a': 'showTab',
       'click .fb-add-field-types a': 'addField',
-      'click .fb-edit-finished a': 'showTabAddField',
-      'mouseenter .fb-add-field-types a': 'showFieldInstructions',
-      'mouseleave .fb-add-field-types a': 'clearFieldInstructions'
+      'click .fb-edit-finished a': 'showTabAddField'
     };
 
     BuilderView.prototype.captureDelete = function(evt) {
@@ -614,6 +612,16 @@
     BuilderView.prototype.initialize = function(options) {
       var newSubmit, selector, setter, _ref7, _ref8;
       $(document).keydown(this.captureDelete);
+      $(document).tooltip({
+        track: true,
+        items: ".fb-add-field-types a",
+        show: {
+          delay: 500
+        },
+        content: (function() {
+          return Formbuilder.fields[$(this).attr("data-field-type")].instructionDetails;
+        })
+      });
       selector = options.selector, this.formBuilder = options.formBuilder, this.bootstrapData = options.bootstrapData;
       if (!(this.bootstrapData instanceof Array)) {
         this.bootstrapData = this.bootstrapData.fields;
@@ -666,12 +674,14 @@
       var lastElLabel, lastElType, topModel;
       this.$undoDeleteButton = this.$el.find('.js-undo-delete');
       if (!this.undoStack.length) {
-        return this.$undoDeleteButton.attr('disabled', true).text(Formbuilder.options.dict.NOTHING_TO_UNDO);
+        this.$undoDeleteButton.attr('disabled', true).text(Formbuilder.options.dict.NOTHING_TO_UNDO);
+        return this.$undoDeleteButton.css("display", "none");
       } else {
         topModel = this.undoStack.at(this.undoStack.length - 1).get('model');
         lastElType = topModel.get(Formbuilder.options.mappings.FIELD_TYPE);
         lastElLabel = topModel.get(Formbuilder.options.mappings.LABEL);
-        return this.$undoDeleteButton.attr('disabled', false).text(Formbuilder.options.dict.UNDO_DELETE(lastElType, lastElLabel));
+        this.$undoDeleteButton.attr('disabled', false).text(Formbuilder.options.dict.UNDO_DELETE(lastElType, lastElLabel));
+        return this.$undoDeleteButton.css("display", "inline-block");
       }
     };
 
@@ -856,17 +866,6 @@
     BuilderView.prototype.hideShowNoResponseFields = function() {
       var _ref7;
       return this.$el.find(".fb-no-response-fields")[(this.collection.length === 1 && Formbuilder.options.FORCE_BOTTOM_SUBMIT && ((_ref7 = this.collection.models[0]) != null ? _ref7.is_last_submit() : void 0)) || this.collection.length === 0 ? 'show' : 'hide']();
-    };
-
-    BuilderView.prototype.clearFieldInstructions = function(e) {
-      return $(".fb-field-instructions").text("");
-    };
-
-    BuilderView.prototype.showFieldInstructions = function(e) {
-      var fieldType, instructions;
-      fieldType = $(e.currentTarget).data('field-type');
-      instructions = Formbuilder.fields[fieldType].instructionDetails ? Formbuilder.fields[fieldType].instructionDetails : "";
-      return $(".fb-field-instructions").html(instructions);
     };
 
     BuilderView.prototype.addField = function(e) {
@@ -1807,7 +1806,7 @@ function print() { __p += __j.call(arguments, '') }
 with (obj) {
 __p += '<div class=\'fb-tab-pane active\' id=\'addField\'>\n  <div class=\'fb-add-field-types\'>\n    <div class=\'section\'>\n      ';
  _.each(_.sortBy(Formbuilder.inputFields, 'order'), function(f){ ;
-__p += '\n        <a data-field-type="' +
+__p += '\n\t\t\t\t<a data-field-type="' +
 ((__t = ( f.field_type )) == null ? '' : __t) +
 '" class="' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
@@ -1817,7 +1816,7 @@ __p += '\n        <a data-field-type="' +
  }); ;
 __p += '\n    </div>\n\n    <div class=\'section\'>\n      ';
  _.each(_.sortBy(Formbuilder.nonInputFields, 'order'), function(f){ ;
-__p += '\n        <a data-field-type="' +
+__p += '\n\t\t\t<a data-field-type="' +
 ((__t = ( f.field_type )) == null ? '' : __t) +
 '" class="' +
 ((__t = ( Formbuilder.options.BUTTON_CLASS )) == null ? '' : __t) +
@@ -1825,7 +1824,7 @@ __p += '\n        <a data-field-type="' +
 ((__t = ( f.addButton )) == null ? '' : __t) +
 '\n        </a>\n      ';
  }); ;
-__p += '\n    </div>\n  </div>\n\n  <div class=\'fb-field-instructions\'></div>\n</div>\n';
+__p += '\n    </div>\n  </div>\n</div>\n';
 
 }
 return __p
@@ -1878,7 +1877,7 @@ this["Formbuilder"]["templates"]["partials/right_side"] = function(obj) {
 obj || (obj = {});
 var __t, __p = '', __e = _.escape;
 with (obj) {
-__p += '<div class=\'fb-right\'>\n  <div class=\'fb-no-response-fields\'>No response fields. Drag one over!</div>\n  <div class=\'fb-response-fields\'></div>\n</div>\n';
+__p += '<div class=\'fb-right\'>\n  <div class=\'fb-no-response-fields\'>No response fields. Click or drag one over.</div>\n  <div class=\'fb-response-fields\'></div>\n</div>\n';
 
 }
 return __p
