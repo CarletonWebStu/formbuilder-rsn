@@ -4,7 +4,7 @@ Formbuilder.registerField 'text',
   order: 0
 
   view: """
-    <input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'/>
+    <input disabled type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'/>
   """
 
   edit: """

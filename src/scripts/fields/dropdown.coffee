@@ -5,7 +5,7 @@ Formbuilder.registerField 'dropdown',
   order: 24
 
   view: """
-    <select>
+    <select disabled>
       <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>
         <option value=''></option>
       <% } %>

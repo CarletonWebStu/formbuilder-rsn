@@ -1346,7 +1346,7 @@
 
   Formbuilder.registerField('dropdown', {
     order: 24,
-    view: "<select>\n  <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>\n    <option value=''></option>\n  <% } %>\n\n  <%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n  %>\n    <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </option>\n  <% } %>\n</select>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>",
+    view: "<select disabled>\n  <% if (rf.get(Formbuilder.options.mappings.INCLUDE_BLANK)) { %>\n    <option value=''></option>\n  <% } %>\n\n  <%\n    var optionsForLooping = rf.get(Formbuilder.options.mappings.OPTIONS) || [];\n    for (var i = 0 ; i < optionsForLooping.length ; i++) {\n  %>\n    <option <%= rf.get(Formbuilder.options.mappings.OPTIONS)[i].checked && 'selected' %>>\n      <%= Formbuilder.helpers.warnIfEmpty(rf.get(Formbuilder.options.mappings.OPTIONS)[i].label, Formbuilder.options.dict.EMPTY_OPTION_WARNING) %>\n    </option>\n  <% } %>\n</select>\n\n<% if (optionsForLooping.length == 0) { %>\n    <%= Formbuilder.helpers.warnIfEmpty(\"\", Formbuilder.options.dict.EMPTY_OPTION_LIST_WARNING) %>\n<% } %>",
     edit: "<%= Formbuilder.templates['edit/options']() %>",
     /*was:  """
       <%= Formbuilder.templates['edit/options']({ includeBlank: true }) %>
@@ -1423,7 +1423,7 @@
 
   Formbuilder.registerField('paragraph', {
     order: 5,
-    view: "<textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>",
+    view: "<textarea disabled class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>",
     edit: "<%= Formbuilder.templates['edit/defaultVal']() %>",
     /*was: """
       <%= Formbuilder.templates['edit/size']() %>
@@ -1494,7 +1494,7 @@
   Formbuilder.registerField('submit_button', {
     order: 20,
     type: 'non_input',
-    view: "<label class=\"preview-only\">Submit Button</label>\n<button><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
+    view: "<label class=\"preview-only\">Submit Button</label>\n<button disabled><%= rf.get(Formbuilder.options.mappings.LABEL) %></button>",
     edit: "<div class='fb-edit-section-header'>Button Label</div>\n<input type=\"text\" data-rv-input='model.<%= Formbuilder.options.mappings.LABEL %>'></input>",
     addButton: "<span class='symbol'><span class='fa fa-inbox'></span></span> Submit Button",
     defaultAttributes: function(attrs) {
@@ -1512,7 +1512,7 @@
 
   Formbuilder.registerField('text', {
     order: 0,
-    view: "<input type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'/>",
+    view: "<input disabled type='text' class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'/>",
     edit: "<%= Formbuilder.templates['edit/defaultVal']() %>",
     /*was: """
       <%= Formbuilder.templates['edit/size']() %>

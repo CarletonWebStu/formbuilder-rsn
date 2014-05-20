@@ -5,7 +5,7 @@ Formbuilder.registerField 'paragraph',
   order: 5
 
   view: """
-    <textarea class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>
+    <textarea disabled class='rf-size-<%= rf.get(Formbuilder.options.mappings.SIZE) %>'></textarea>
   """
 
   edit: """
