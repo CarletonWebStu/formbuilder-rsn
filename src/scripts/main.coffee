@@ -785,6 +785,7 @@ class BuilderView extends Backbone.View
   undoDelete: (e) ->
     restoree = @undoStack.pop()
     @collection.create(restoree.get('model'), {position: restoree.get('position')})
+    return false
 
 class Formbuilder
 

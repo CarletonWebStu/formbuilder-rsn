@@ -1033,9 +1033,10 @@
     BuilderView.prototype.undoDelete = function(e) {
       var restoree;
       restoree = this.undoStack.pop();
-      return this.collection.create(restoree.get('model'), {
+      this.collection.create(restoree.get('model'), {
         position: restoree.get('position')
       });
+      return false;
     };
 
     return BuilderView;
