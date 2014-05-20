@@ -602,7 +602,7 @@
       'click .fb-edit-finished a': 'showTabAddField'
     };
 
-    BuilderView.prototype.captureDelete = function(evt) {
+    BuilderView.prototype.captureDeleteAndEnter = function(evt) {
       if (evt.which === DELETE_KEYCODE || evt.keyCode === DELETE_KEYCODE) {
         if (evt.target && (evt.target.type === "text" || evt.target.type === "textarea")) {
           return true;
@@ -610,11 +610,19 @@
           return false;
         }
       }
+      /*
+      else if (evt.which == ENTER_KEYCODE or evt.keyCode == ENTER_KEYCODE)
+        if (evt.target and (evt.target.type == "textarea"))
+          return true
+        else
+          return false
+      */
+
     };
 
     BuilderView.prototype.initialize = function(options) {
       var newSubmit, selector, setter, _ref7, _ref8;
-      $(document).keydown(this.captureDelete);
+      $(document).keydown(this.captureDeleteAndEnter);
       $(document).tooltip({
         track: true,
         items: ".fb-add-field-types a",

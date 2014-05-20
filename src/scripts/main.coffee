@@ -403,15 +403,22 @@ class BuilderView extends Backbone.View
     'click .fb-edit-finished a': 'showTabAddField'
 
   # unless the user is editing text, let's intercept delete keypresses. otherwise too easy to go back in the history
-  captureDelete: (evt) ->
+  # similarly for enter - some browsers (safari, IE) submit the form, which we don't want.
+  captureDeleteAndEnter: (evt) ->
     if (evt.which == DELETE_KEYCODE or evt.keyCode == DELETE_KEYCODE)
       if (evt.target and (evt.target.type == "text" or evt.target.type == "textarea"))
         return true
       else
         return false
+    else if (evt.which == ENTER_KEYCODE or evt.keyCode == ENTER_KEYCODE)
+      if (evt.target and (evt.target.type == "textarea"))
+        return true
+      else
+        return false
+
 
   initialize: (options) ->
-    $(document).keydown(@captureDelete)
+    $(document).keydown(@captureDeleteAndEnter)
 
     $(document).tooltip({
         track: true
