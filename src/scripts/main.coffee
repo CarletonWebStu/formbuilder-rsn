@@ -97,6 +97,9 @@ class EditFieldView extends Backbone.View
 
         return false
     else if evt.which == ENTER_KEYCODE or evt.keyCode == ENTER_KEYCODE
+      if (navigator.userAgent.match(/(iPad|iPhone|iPod touch)/i))
+        return
+
       @addOption evt
 
     # console.log evt

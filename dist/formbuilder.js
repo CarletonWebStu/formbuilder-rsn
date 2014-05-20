@@ -270,6 +270,9 @@
           return false;
         }
       } else if (evt.which === ENTER_KEYCODE || evt.keyCode === ENTER_KEYCODE) {
+        if (navigator.userAgent.match(/(iPad|iPhone|iPod touch)/i)) {
+          return;
+        }
         return this.addOption(evt);
       }
     };
