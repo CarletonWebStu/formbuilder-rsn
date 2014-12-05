@@ -7,7 +7,7 @@ Formbuilder.config({
                     'email',
                     'price',
                     'address',
-                    'file',
+                    // 'file',
                     'section_break'],
   SHOW_SAVE_BUTTON: false,
 	ALLOW_TYPE_CHANGE: true,
