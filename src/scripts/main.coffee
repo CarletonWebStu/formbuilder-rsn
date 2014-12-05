@@ -14,6 +14,17 @@ class FormbuilderModel extends Backbone.DeepModel
     # if the model is last and is a submit button
     (@collection.length - @collection.indexOf(@)) is 1 and @get(Formbuilder.options.mappings.FIELD_TYPE) is 'submit_button'
 
+  constructor: () ->
+    super
+
+    if (@attributes.cid)
+      # this was previously constructed. If there's a problem, it was handled via performInitialUniqueIdPass
+    else
+      # this is being created on the fly - either automatically (like a submit button) or
+      # via user interaction by adding a field. Either way we don't trust the cid that was automatically assigned so let's
+      # overwrite it. It'll get copied into @attributes.cid via copyCidToModel in a second.
+      @cid = Formbuilder.getNextUniqueGlobalId("c")
+
 class FormbuilderCollection extends Backbone.Collection
   initialize: ->
     @on 'add', @copyCidToModel
@@ -819,11 +830,21 @@ class Formbuilder
         return "<span class='fb-error'><i class='fa fa-exclamation'></i> " + warning + "</span>"
       s
 
-  # take two - just use underscore utility to generate a unique id, prefixed with "c" also so that we
-  # don't collide with the id's generated for the other form elements. (in the db these will all be getting
-  # the prefixes stripped off, so it's important that there are no collisions)
   @getNextUniqueOptionId: ->
-    return _.uniqueId("c")
+    # take two - just use underscore utility to generate a unique id, prefixed with "c" also so that we
+    # don't collide with the id's generated for the other form elements. (in the db these will all be getting
+    # the prefixes stripped off, so it's important that there are no collisions)
+    # return _.uniqueId("c")
+
+    #take three - track it ourselves. Getting weird behavior,probably b/c of mixing across options and top level model elements
+    return @getNextUniqueGlobalId("c")
+
+  @getNextUniqueGlobalId: (prefix="") ->
+    nextId = ++Formbuilder.maxUsedId
+    if prefix != ""
+      return prefix + nextId
+    else
+      return nextId
     
   @options:
     BUTTON_CLASS: 'fb-button'
@@ -962,6 +983,7 @@ class Formbuilder
   Note that similar logic exists on the PHP side so much of this is just being overly cautious...although
   it also allows us to stay closer to the main formbuilder codebase with just this shim in the middle.
   ###
+  ###
   preprocessBootstrapDataForOptionsValidity: (args) ->
     bootstrapData = args.bootstrapData
     if (bootstrapData instanceof Array)
@@ -974,12 +996,119 @@ class Formbuilder
         for opt in f.field_options.options
           if (!opt.reasonOptionId?)
             opt.reasonOptionId = Formbuilder.getNextUniqueOptionId()
+  ###
+
+
+  # 2014-12-05 fix START
+  ###
+  Uncovered a bug where element/option id's were colliding under certain circumstances. This leads to XML that looks ok at first
+  glance, and renders ok in Formbuilder, but when Thor/Disco attempt to use it they get quite understandably confused and have
+  to choose to only display one of the elements. Spent quite awhile trying to figure out why this is happening, as its hard to
+  reproduce. Best guess is that it's related to Underscore's uniqueId function, which we were using both
+  in Backbone models and as the source behind the reasonOptionId attribute.
+
+  Hopeful solution - stop using _.uniqueId and instead:
+  1. when data first comes into Formbuilder, we take a pass through it. See the performInitialUniqueIdPass function. This
+     looks at all elements and options and detects collisions and missing id's, adding those elements to a list to come back
+     at on a second pass. Also tracks the maximum id encountered across all elements.
+
+  2. added a new function, Formbuilder::getNextUniqueGlobalId, that is used as a replacement for _.uniqueId, based on the
+     maximum id calculated in step 1.
+
+  3. for all the problem elements detected in step 1, we take a pass through those and plug valid id's into the bootstrap json
+     using getNextUniqueGlobalId. This is then passed off to the model and we proceed as normal. It's important to note
+     that given good bootstrap data, no alterations are made, so if we ever do allow form editing in Reason w/o db 
+     destruction, this won't be a problem.
+
+  4. altered Formbuilder.getNextUniqueOptionId to use getNextUniqueGlobalId instead. This takes care of option id's.
+
+  5. updated the FormbuilderModel constructor to use getNextUniqueGlobalId too. This one is a little trickier as a cid
+     is actually assigned in the guts of Backbone DeepModel; so when creating a new element, the constructor modification
+     will blow those away with unique ones we generate, while if we're dealing with stuff the user saved to the db earlier,
+     things are left alone. Again, this is to maintain consistent id's wherever possible.
+  ###
+  reassignElementIdentifier: (fields, slot) ->
+    fields[slot].cid = Formbuilder.getNextUniqueGlobalId("c")
+
+  reassignOptionIdentifier: (fields, elSlot, optSlot) ->
+    f = fields[elSlot]
+    if f.field_options? and f.field_options.options?
+      f.field_options.options[optSlot].reasonOptionId = Formbuilder.getNextUniqueOptionId()
+
+  reassignIdentifiers: (fields) ->
+    # console.log "*** REASSIGNING IDENTIFIERS ***"
+    for fixer in @elsAndOptsToReId
+      fixChunks = fixer.split(":")
+      if fixChunks[0] == "element"
+        @reassignElementIdentifier(fields, Number(fixChunks[1]))
+      else if fixChunks[0] == "option"
+        slotChunks = (fixChunks[1]).split(",")
+        @reassignOptionIdentifier(fields, Number(slotChunks[0]), Number(slotChunks[1]))
+
+  # returns true if this identifier is previously used
+  trackDupes: (identifier) ->
+    if (!identifier or identifier == "")
+      return false
+
+    # strip out all non-numeric characters.
+    if (!Number.isInteger(identifier))
+      identifier = Number(identifier.replace(/\D/g, ''))
+
+    if (@dupeIdTracker[identifier])
+      @dupeIdTracker[identifier] = @dupeIdTracker[identifier] + 1
+    else
+      @dupeIdTracker[identifier] = 1
+
+    Formbuilder.maxUsedId = Math.max(Formbuilder.maxUsedId, identifier)
+
+    return @dupeIdTracker[identifier] > 1
+
+  performInitialUniqueIdPass: (args) ->
+    console.log "performInitialUniqueIdPass start..."
+    # need some variables to track everything
+    @madeInitialIdAdjustments = false
+    @dupeIdTracker = {}
+    Formbuilder.maxUsedId = -1;
+    @elsAndOptsToReId = []
+
+    bootstrapData = args.bootstrapData
+    if (bootstrapData instanceof Array)
+      fields = bootstrapData
+    else
+      fields = bootstrapData.fields
+
+    for f,i in fields
+      if (!f.cid? or @trackDupes(f.cid))
+        # console.log "this toplevel is either missing an id or has a dupe id"
+        @elsAndOptsToReId.push "element:" + i
+        # if all we added an id to was the submit_button, a forced save is NOT necessary
+        if f.field_type != "submit_button"
+          @madeInitialIdAdjustments = true;
+
+      if f.field_options? and f.field_options.options?
+        for opt, k in f.field_options.options
+          # console.log "checking opt [" + opt.label + "]"
+
+          if (!opt.reasonOptionId? or @trackDupes(opt.reasonOptionId))
+            # console.log "this lption either missing an id, or has a dupe id"
+            @elsAndOptsToReId.push "option:" + i + "," + k
+            @madeInitialIdAdjustments = true;
+
+    @reassignIdentifiers(fields)
+  # 2014-12-05 fix END
+
     
   constructor: (instanceOpts={}) ->
     _.extend @, Backbone.Events
     args = _.extend instanceOpts, {formBuilder: @}
-    @preprocessBootstrapDataForOptionsValidity(args)
+    # @preprocessBootstrapDataForOptionsValidity(args)
+    @performInitialUniqueIdPass(args)
     @mainView = new BuilderView args
+
+    if @madeInitialIdAdjustments
+      # we made some changes - force a save!
+      @mainView.formSaved = false
+
     @debug.BuilderView = @mainView
 
 window.Formbuilder = Formbuilder
