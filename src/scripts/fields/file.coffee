@@ -8,7 +8,9 @@ Formbuilder.registerField 'file',
     <input type='file' />
   """
 
-  edit: ""
+  edit: """
+    <%= Formbuilder.templates['edit/file_restrictions']() %>
+  """
 
   # addButton: """
     # <span class="symbol"><span class="fa fa-cloud-upload"></span></span> File

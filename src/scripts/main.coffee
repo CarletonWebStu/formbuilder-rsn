@@ -879,6 +879,9 @@ class Formbuilder
       MINLENGTH: 'field_options.minlength'
       MAXLENGTH: 'field_options.maxlength'
       LENGTH_UNITS: 'field_options.min_max_length_units'
+      FILE_UPLOAD_EXTENSION_RESTRICTIONS: 'file_upload_extension_restrictions'
+      FILE_UPLOAD_TYPE_RESTRICTIONS: 'file_upload_type_restrictions'
+      FILE_UPLOAD_SIZE_RESTRICTION: 'file_upload_size_restriction'
 
     dict:
       ALL_CHANGES_SAVED: 'All changes saved'
