@@ -651,7 +651,15 @@ class BuilderView extends Backbone.View
       connectToSortable: @$responseFields
       cursorAt: { left: @$responseFields.width()/2, top: 20 }
       distance: 15
-      helper: =>
+      helper: "clone"
+      start: (e, ui) =>
+        draggedElement = $(ui.helper[0])
+        draggedElement.css({
+          "height": "80px"
+          "width": @$responseFields.width()
+        })
+        
+      old_helper: =>
         $helper = $("<div class='response-field-draggable-helper' />")
         $helper.css
           width: @$responseFields.width() # hacky, won't get set without inline style
@@ -1067,7 +1075,7 @@ class Formbuilder
     return @dupeIdTracker[identifier] > 1
 
   performInitialUniqueIdPass: (args) ->
-    console.log "performInitialUniqueIdPass start..."
+    console.log "performInitialUniqueIdPass start with draggable fix..."
     # need some variables to track everything
     @madeInitialIdAdjustments = false
     @dupeIdTracker = {}
